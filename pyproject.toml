@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "dazzler"
+version = "0.1.0"
+description = "Dazzling Dash-boards for KITT4SME services."
+authors = ["c0c0n3"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+dash = "^2.3.1"
+dash-bootstrap-components = "^1.0.3"
+dash-bootstrap-templates = "^1.0.5"
+fastapi = "^0.75.0"
+Flask = "^2.1.1"
+fipy = {git = "https://github.com/c0c0n3/kitt4sme.fipy.git", tag = "0.2.1"}
+pandas = "^1.4.1"
+pydantic = "^1.9.0"
+uvicorn = {extras = ["standard"], version = "^0.17.6"}
+
+[tool.poetry.dev-dependencies]
+coverage = "^6.3"
+pytest = "^7.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
