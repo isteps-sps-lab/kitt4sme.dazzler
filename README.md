@@ -53,6 +53,21 @@ $ coverage run -m pytest -v tests
 $ coverage html
 ```
 
+Run Dazzler locally on port 8080
+
+```console
+$ poetry shell
+$ python -m dazzler.main
+# ^ same as: uvicorn dazzler.main:app --host 0.0.0.0 --port 8000
+```
+
+Build and run the Docker image
+
+```console
+$ docker build -t kitt4sme/dazzler .
+$ docker run -p 8000:8000 kitt4sme/dazzler
+```
+
 
 
 
