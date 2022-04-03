@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+
+  crate:
+    image: crate:4.5.1
+    command: crate -Cauth.host_based.enabled=false
+      -Ccluster.name=democluster -Chttp.cors.enabled=true -Chttp.cors.allow-origin="*"
+    ports:
+      - "4200:4200"
+      - "4300:4300"
+    networks:
+     - simtests
+
+  quantumleap:
+    image: orchestracities/quantumleap:0.8.2
+    depends_on:
+      - crate
+    networks:
+      - simtests
+    ports:
+      - "8668:8668"
+    environment:
+      - CRATE_HOST=crate
+      - USE_GEOCODING=False
+      - CACHE_QUERIES=False
+      - LOGLEVEL=DEBUG
+
+  dazzler:
+    build: ../../
+    image: kitt4sme/dazzler
+    networks:
+      - simtests
+    ports:
+      - "8000:8000"
+
+networks:
+  simtests:
+    driver: bridge
