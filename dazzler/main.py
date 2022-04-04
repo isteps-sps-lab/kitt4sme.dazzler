@@ -23,10 +23,10 @@ def read_version():
 
 def mount_dashboards():
     subAppBuilder = DashboardSubApp(app, __name__)
-    subAppBuilder.assemble('/dazzler/manufracture/', roughnator.dash_builder)
-    subAppBuilder.assemble('/dazzler/smithereens/', viqe.dash_builder)
-    subAppBuilder.assemble('/dazzler/x/', viqe.dash_builder)
-    subAppBuilder.assemble('/dazzler/demo/', demo.dash_builder)
+    subAppBuilder.assemble(roughnator.dash_builder, tenant_name='manufracture')
+    subAppBuilder.assemble(viqe.dash_builder, tenant_name='smithereens')
+    subAppBuilder.assemble(viqe.dash_builder, tenant_name='x')
+    subAppBuilder.assemble(demo.dash_builder, tenant_name='demo')
 
 
 mount_dashboards()
