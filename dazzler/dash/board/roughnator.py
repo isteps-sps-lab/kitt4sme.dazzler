@@ -44,4 +44,6 @@ class RoughnatorDashboard(EntityMonitorDashboard):
         '''
 
     def make_figure(self, df: pd.DataFrame) -> Any:
-        return px.line(df, x=df.index, y=[df.acceleration, df.roughness])
+        color_map = {'roughness': 'coral', 'acceleration': 'silver'}
+        return px.line(df, x=df.index, y=[df.acceleration, df.roughness],
+                        color_discrete_map=color_map)
