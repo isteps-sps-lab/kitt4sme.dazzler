@@ -69,8 +69,62 @@ $ docker run -p 8000:8000 kitt4sme/dazzler
 ```
 
 
+### Demo dashboard
+
+So we're piggybacking on Dash and its Bootstrap Components extension to
+get dazzling dashboards. If you're new to this visualisation framework,
+start Dazzler (either directly or through Docker) and browse to
+
+- http://localhost:8000/dazzler/demo
+
+to see some of the Dash Bootstrap goodies. Then have a look under the
+bonnet to check out the implementation. (Code adapted from the [Dash
+Bootstrap Theme Explorer][dash.explorer].)
+
+
+### Live simulator
+
+We've also whipped together a test bed to simulate a live environment
+similar to that of the KITT4SME cluster. In the `tests/sim` directory,
+you'll find a Docker compose file with
+
+* Quantum Leap with a CrateDB backend
+* Our Dazzler service
+
+To start the show, edit `dazzler.main` to replace the Bootstrap demo
+dashboard with either VIQE's or Roughnator's
+
+```python
+subAppBuilder.assemble(viqe.dash_builder, tenant_name='demo')
+# or:
+# subAppBuilder.assemble(roughnator.dash_builder, tenant_name='demo')
+```
+
+Then run (Ctrl+C to stop)
+
+```console
+$ poetry shell
+$ python tests/sim
+```
+
+This will bring up the Docker compose environment (assuming you've got a
+Docker engine running already) and then will start sending Quantum Leap
+Roughnator estimate and VIQE inspection report entities. To see what's
+going on, browse to the CrateDB Web UI at: http://localhost:4200.
+
+Now browse to our Dazzler service page at:
+
+- http://localhost:8000/dazzler/demo
+
+You should see the dashboard you wired in earlier with an explanation
+of what it is and how it works. The dashboard fetches new data from
+Quantum Leap every few seconds, so as the simulator sends entities
+you should be able to see the new data points reflected in the plot.
+
+
 
 
 [dash]: https://plotly.com/dash/
+[dash.explorer]: https://hellodash.pythonanywhere.com/figure_templates
 [fapi]: https://fastapi.tiangolo.com/
 [k4s]: https://kitt4sme.eu/

@@ -17,6 +17,7 @@ See also:
 - https://github.com/rusnyder/fastapi-plotly-dash
 - https://towardsdatascience.com/embed-multiple-dash-apps-in-flask-with-microsoft-authenticatio-44b734f74532
 """
+from pathlib import PurePosixPath
 from typing import Callable
 
 from dash import Dash
@@ -65,19 +66,75 @@ class DashboardSubApp:
             server=flask_app,
             # url_base_pathname=base_path,
             requests_pathname_prefix=base_path,
-            suppress_callback_exceptions=True,
+            suppress_callback_exceptions=False,
+            prevent_initial_callbacks=True,
             external_stylesheets=THEME
         )
 
-    def assemble(self, base_path: str, builder: DashBuilder):
+    def assemble(self, builder: DashBuilder, tenant_name: str,
+                service_path: str = '/'):
         """Instantiate a Dash dashboard, delegate its filling with app logic
         and widgets, then wire it into FastAPI.
+        The Dash app base path will be in the format detailed in `BasePath`.
 
         Args:
-            base_path: base URL from where the dashboard app will be served.
-                Needs to start and end with a '/'.
             builder: factory function to populate the dashboard with widgets
                 and app logic.
+            tenant_name: the name of the tenant the Dash app is for.
+            service_path: Optional FIWARE service path.
         """
+        base_path = str(BasePath(tenant_name, service_path))
         dashapp = builder(self._make_board(base_path))
         self._app.mount(base_path, WSGIMiddleware(dashapp.server))
+
+
+class BasePath:
+    """Base URL from where the dashboard app will be served.
+    This class makes sure the path is in the format
+    ```
+        DAZZLER_ROOT / tenant_name / service_path
+    ```
+    where the service path is optional. Also notice Dash wants base paths
+    to start and end with a '/' which this class enforces when converting
+    to string.
+    """
+
+    DAZZLER_ROOT = '/dazzler'
+
+    @staticmethod
+    def from_board_app(app: Dash) -> 'BasePath':
+        proto = BasePath(tenant_name='x')
+        proto._path = PurePosixPath(app.config.requests_pathname_prefix)
+        return proto
+    # NOTE. This works as long as the DashboardSubApp always uses BasePath
+    # to configure Dash's requests_pathname_prefix. See code above.
+
+    @staticmethod
+    def _build_base_path(tenant_name: str, service_path: str) -> PurePosixPath:
+        root = PurePosixPath(BasePath.DAZZLER_ROOT)
+        tenant = PurePosixPath(tenant_name)
+        svc = PurePosixPath(service_path)
+
+        return root / tenant.relative_to(tenant.anchor) / \
+            svc.relative_to(svc.anchor)  # see NOTE below
+    # NOTE. Stripping leading '/'.
+    # Using the above trick if there's a leading '/', it gets removed. If the
+    # path isn't absolute, then it's returned as is. We do this b/c if you
+    # join two absolute paths, then you only get the second path.
+    # See: https://stackoverflow.com/questions/50846049
+
+    def __init__(self, tenant_name: str, service_path: str = '/'):
+        assert len(tenant_name) > 0
+        self._path = self._build_base_path(tenant_name, service_path)
+
+    def __str__(self) -> str:
+        return str(self._path) + '/'
+    # NOTE. Dash base paths. They must end with a '/' which is why we
+    # append it here.
+
+    def tenant(self) -> str:
+        return self._path.parts[2]
+
+    def service_path(self) -> str:
+        ps = [f"/{p}" for p in self._path.parts[3:]]
+        return ''.join(ps) + '/'
