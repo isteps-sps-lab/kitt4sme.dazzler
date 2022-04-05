@@ -31,7 +31,7 @@ def wait_on_quantumleap():
 def mk_roughness_estimate() -> RoughnessEstimateEntity:
     return RoughnessEstimateEntity(
         id = '',
-        acceleration=float_attr_close_to(35.07),
+        acceleration=float_attr_close_to(5.07),
         roughness=float_attr_close_to(1.25),
     )
 
