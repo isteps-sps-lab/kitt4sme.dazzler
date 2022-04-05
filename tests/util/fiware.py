@@ -3,7 +3,7 @@ from typing import Generator, List
 
 from fipy.ngsi.headers import FiwareContext
 from fipy.ngsi.quantumleap import QuantumLeapClient
-from fipy.sim.generator import bool_attr, float_attr_close_to, \
+from fipy.sim.generator import BoolAttr, float_attr_close_to, \
     EntityFactory, entity_batch
 from fipy.wait import wait_for_quantumleap
 
@@ -48,10 +48,12 @@ roughness_estimate_batches_stream = mk_roughness_estimate_batches_stream()
 
 
 def mk_raw_material_inspection() -> RawMaterialInspectionEntity:
+    area = float_attr_close_to(0)
+    result = BoolAttr.new(area.value >= 0.4)
     return RawMaterialInspectionEntity(
         id = '',
-        Inspection_Result=bool_attr(),
-        Area=float_attr_close_to(36.1)
+        Inspection_Result=result,
+        Area=area
     )
 
 
