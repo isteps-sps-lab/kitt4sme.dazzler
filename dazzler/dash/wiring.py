@@ -66,7 +66,8 @@ class DashboardSubApp:
             server=flask_app,
             # url_base_pathname=base_path,
             requests_pathname_prefix=base_path,
-            suppress_callback_exceptions=True,
+            suppress_callback_exceptions=False,
+            prevent_initial_callbacks=True,
             external_stylesheets=THEME
         )
 
