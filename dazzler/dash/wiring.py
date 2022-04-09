@@ -17,6 +17,7 @@ See also:
 - https://github.com/rusnyder/fastapi-plotly-dash
 - https://towardsdatascience.com/embed-multiple-dash-apps-in-flask-with-microsoft-authenticatio-44b734f74532
 """
+from itertools import dropwhile, islice, takewhile
 from pathlib import PurePosixPath
 from typing import Callable
 
@@ -92,14 +93,15 @@ class BasePath:
     """Base URL from where the dashboard app will be served.
     This class makes sure the path is in the format
     ```
-        DAZZLER_ROOT / tenant_name / service_path
+        DAZZLER_ROOT / tenant_name / service_path /-/ board_path
     ```
-    where the service path is optional. Also notice Dash wants base paths
-    to start and end with a '/' which this class enforces when converting
-    to string.
+    where the service and board paths are optional. Also notice Dash wants
+    base paths to start and end with a '/' which this class enforces when
+    converting to string.
     """
 
     DAZZLER_ROOT = '/dazzler'
+    BOARD_PATH_SEPARATOR = '-'
 
     @staticmethod
     def from_board_app(app: Dash) -> 'BasePath':
@@ -107,25 +109,38 @@ class BasePath:
         proto._path = PurePosixPath(app.config.requests_pathname_prefix)
         return proto
     # NOTE. This works as long as the DashboardSubApp always uses BasePath
-    # to configure Dash's requests_pathname_prefix. See code above.
+    # to configure Dash's requests_pathname_prefix. Have a look at the
+    # DashboardSubApp's class implementation for the details.
 
     @staticmethod
-    def _build_base_path(tenant_name: str, service_path: str) -> PurePosixPath:
-        root = PurePosixPath(BasePath.DAZZLER_ROOT)
-        tenant = PurePosixPath(tenant_name)
-        svc = PurePosixPath(service_path)
-
-        return root / tenant.relative_to(tenant.anchor) / \
-            svc.relative_to(svc.anchor)  # see NOTE below
+    def _make_relative(path: str) -> PurePosixPath:
+        p = PurePosixPath(path)
+        return p.relative_to(p.anchor)
     # NOTE. Stripping leading '/'.
     # Using the above trick if there's a leading '/', it gets removed. If the
     # path isn't absolute, then it's returned as is. We do this b/c if you
     # join two absolute paths, then you only get the second path.
     # See: https://stackoverflow.com/questions/50846049
 
-    def __init__(self, tenant_name: str, service_path: str = '/'):
+    @staticmethod
+    def _build_base_path(tenant_name: str, service_path: str,
+                         board_path: str) -> PurePosixPath:
+        root = PurePosixPath(BasePath.DAZZLER_ROOT)
+        tenant = BasePath._make_relative(tenant_name)
+        svc = BasePath._make_relative(service_path)
+        board = BasePath._make_relative(board_path)
+
+        return root / tenant / svc / BasePath.BOARD_PATH_SEPARATOR / board
+
+    @staticmethod
+    def _not_board_path_sep(path_component: str) -> bool:
+        return path_component != BasePath.BOARD_PATH_SEPARATOR
+
+    def __init__(self, tenant_name: str, service_path: str = '/',
+                 board_path: str = '/'):
         assert len(tenant_name) > 0
-        self._path = self._build_base_path(tenant_name, service_path)
+        self._path = self._build_base_path(tenant_name, service_path,
+                                           board_path)
 
     def __str__(self) -> str:
         return str(self._path) + '/'
@@ -136,5 +151,15 @@ class BasePath:
         return self._path.parts[2]
 
     def service_path(self) -> str:
-        ps = [f"/{p}" for p in self._path.parts[3:]]
+        path_after_tenant = self._path.parts[3:]
+        svc_path_components = takewhile(self._not_board_path_sep,
+                                        path_after_tenant)
+        ps = [f"/{p}" for p in svc_path_components]
+        return ''.join(ps) + '/'
+
+    def dashboard_path(self) -> str:
+        path_after_tenant = self._path.parts[3:]
+        svc_path_components = dropwhile(self._not_board_path_sep,
+                                        path_after_tenant)
+        ps = [f"/{p}" for p in islice(svc_path_components, 1, None)]
         return ''.join(ps) + '/'
