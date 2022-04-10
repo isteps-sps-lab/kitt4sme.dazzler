@@ -73,7 +73,7 @@ class DashboardSubApp:
         )
 
     def assemble(self, builder: DashBuilder, tenant_name: str,
-                service_path: str = '/'):
+                service_path: str = '/', board_path: str = '/'):
         """Instantiate a Dash dashboard, delegate its filling with app logic
         and widgets, then wire it into FastAPI.
         The Dash app base path will be in the format detailed in `BasePath`.
@@ -83,8 +83,10 @@ class DashboardSubApp:
                 and app logic.
             tenant_name: the name of the tenant the Dash app is for.
             service_path: Optional FIWARE service path.
+            board_path: Optional dashboard path. Use this to run different
+                dashboard apps for the same tenant.
         """
-        base_path = str(BasePath(tenant_name, service_path))
+        base_path = str(BasePath(tenant_name, service_path, board_path))
         dashapp = builder(self._make_board(base_path))
         self._app.mount(base_path, WSGIMiddleware(dashapp.server))
 
