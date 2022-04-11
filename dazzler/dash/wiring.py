@@ -19,7 +19,7 @@ See also:
 """
 from itertools import dropwhile, islice, takewhile
 from pathlib import PurePosixPath
-from typing import Callable
+from typing import Callable, Generator
 
 from dash import Dash
 import dash_bootstrap_components as dbc
@@ -27,6 +27,8 @@ from dash_bootstrap_templates import load_figure_template
 from fastapi import FastAPI
 from fastapi.middleware.wsgi import WSGIMiddleware
 from flask import Flask
+
+from dazzler.config import BoardAssembly, Settings
 
 
 DashBuilder = Callable[[Dash], Dash]
@@ -89,6 +91,53 @@ class DashboardSubApp:
         base_path = str(BasePath(tenant_name, service_path, board_path))
         dashapp = builder(self._make_board(base_path))
         self._app.mount(base_path, WSGIMiddleware(dashapp.server))
+
+    def mount_dashboards(self, config: Settings):
+        """Create and mount a Dash dashboard app on FastAPI for each dashboard
+        assembly description found in the given configuration settings.
+
+        Args:
+            config: Dazzler configuration settings.
+        """
+        for args in DashboardsConfig(config).assemble_args():
+            self.assemble(**args)
+
+
+class DashboardsConfig:
+    """Streams dashboard assembly settings from configuration.
+
+    The `assemble_args` method produces a stream where each element is a
+    dictionary containing the arguments `DashboardSubApp.assemble` takes
+    in, read from the corresponding fields in the Dazzler settings.
+    """
+
+    def __init__(self, config: Settings):
+        self._cfg = config.boards
+
+    @staticmethod
+    def _args_from_config(tenant_name: str, board_spec: BoardAssembly) -> dict:
+        args = {
+            'tenant_name': tenant_name,
+            'builder': board_spec.builder
+        }
+        if board_spec.service_path:
+            args['service_path'] = board_spec.service_path
+        if board_spec.board_path:
+            args['board_path'] = board_spec.board_path
+
+        return args
+
+    def assemble_args(self) -> Generator[dict, None, None]:
+        """Produce a stream where each element is a dictionary containing
+        the arguments `DashboardSubApp.assemble` takes in, read from the
+        corresponding fields in the Dazzler settings.
+
+        Yields:
+            The next dictionary in the stream.
+        """
+        for tenant_name in self._cfg:
+            for board_spec in self._cfg[tenant_name]:
+                yield self._args_from_config(tenant_name, board_spec)
 
 
 class BasePath:
