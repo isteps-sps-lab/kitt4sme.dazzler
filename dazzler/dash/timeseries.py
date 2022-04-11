@@ -23,8 +23,9 @@ def fiware_context_for(app: Dash) -> FiwareContext:
 class QuantumLeapSource:
 
     def __init__(self, app: Dash):
+        cfg = dazzler_config()
         self._client = QuantumLeapClient(
-            base_url=URI(str(dazzler_config.quantumleap_base_url)),
+            base_url=URI(str(cfg.quantumleap_base_url)),
             ctx=fiware_context_for(app)
         )
 

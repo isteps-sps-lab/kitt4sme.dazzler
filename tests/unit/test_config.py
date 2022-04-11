@@ -25,7 +25,7 @@ def test_from_empty_file(monkeypatch):
     monkeypatch.setenv(CONFIG_FILE_ENV_VAR_NAME, EMPTY_YAML_PATH)
     got = Settings.load()
 
-    assert got == dazzler_config
+    assert got == dazzler_config()
 
 
 def test_from_ql_url_file(monkeypatch):
@@ -33,14 +33,14 @@ def test_from_ql_url_file(monkeypatch):
     got = Settings.load()
 
     assert got.quantumleap_base_url == 'http://ql/'
-    assert got.boards == dazzler_config.boards
+    assert got.boards == dazzler_config().boards
 
 
 def test_from_boards_file(monkeypatch):
     monkeypatch.setenv(CONFIG_FILE_ENV_VAR_NAME, BOARDS_YAML_PATH)
     got = Settings.load()
 
-    assert got.quantumleap_base_url == dazzler_config.quantumleap_base_url
+    assert got.quantumleap_base_url == dazzler_config().quantumleap_base_url
     assert len(got.boards) == 2
 
     t1_boards = got.boards['t1']

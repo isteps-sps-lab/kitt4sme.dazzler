@@ -7,7 +7,7 @@ from dazzler.dash.wiring import DashboardSubApp
 
 
 app = FastAPI()
-DashboardSubApp(app, __name__).mount_dashboards(dazzler_config)
+DashboardSubApp(app, __name__).mount_dashboards(dazzler_config())
 
 
 @app.get('/')

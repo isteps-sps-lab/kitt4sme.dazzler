@@ -44,4 +44,5 @@ class Settings(BaseSettings):
         return Settings()
 
 
-dazzler_config = Settings.load()
+def dazzler_config() -> Settings:
+    return Settings.load()
