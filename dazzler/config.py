@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 
+from fipy.cfg.reader import YamlReader
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, PyObject
 
 
@@ -33,5 +34,14 @@ class Settings(BaseSettings):
         DEMO_TENANT_NAME: [BOOTSTRAP_DEMO_BOARD]
     }
 
+    @staticmethod
+    def load() -> 'Settings':
+        reader = YamlReader()
+        raw_settings = reader.from_env_file(
+            env_var_name=CONFIG_FILE_ENV_VAR_NAME, defaults={})
+        if raw_settings:
+            return Settings(**raw_settings)
+        return Settings()
 
-dazzler_config = Settings()
+
+dazzler_config = Settings.load()

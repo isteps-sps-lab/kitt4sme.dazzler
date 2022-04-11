@@ -1,0 +1,9 @@
+boards:
+  t1:
+  - builder: tests.unit.test_config.builder_1
+  - builder: tests.unit.test_config.builder_2
+    board_path: b2
+  t2:
+  - builder: tests.unit.test_config.builder_1
+    service_path: "/sp"
+    board_path: "/b1"
