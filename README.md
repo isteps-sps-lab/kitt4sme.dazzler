@@ -71,11 +71,11 @@ $ docker run -p 8000:8000 kitt4sme/dazzler
 
 ### Demo dashboard
 
-So we're piggybacking on Dash and its Bootstrap Components extension to
+So we piggyback on Dash and its Bootstrap Components extension to
 get dazzling dashboards. If you're new to this visualisation framework,
 start Dazzler (either directly or through Docker) and browse to
 
-- http://localhost:8000/dazzler/demo
+- http://localhost:8000/dazzler/demo/-/
 
 to see some of the Dash Bootstrap goodies. Then have a look under the
 bonnet to check out the implementation. (Code adapted from the [Dash
@@ -90,17 +90,10 @@ you'll find a Docker compose file with
 
 * Quantum Leap with a CrateDB backend
 * Our Dazzler service
+* Dazzler config to make the VIQE and Roughnator dashboards available
+  to a tenant named "demo".
 
-To start the show, edit `dazzler.main` to replace the Bootstrap demo
-dashboard with either VIQE's or Roughnator's
-
-```python
-subAppBuilder.assemble(viqe.dash_builder, tenant_name='demo')
-# or:
-# subAppBuilder.assemble(roughnator.dash_builder, tenant_name='demo')
-```
-
-Then run (Ctrl+C to stop)
+To start the show, run (Ctrl+C to stop)
 
 ```console
 $ poetry shell
@@ -112,14 +105,22 @@ Docker engine running already) and then will start sending Quantum Leap
 Roughnator estimate and VIQE inspection report entities. To see what's
 going on, browse to the CrateDB Web UI at: http://localhost:4200.
 
-Now browse to our Dazzler service page at:
+Now browse to the Roughnator dashboard at:
 
-- http://localhost:8000/dazzler/demo
+- http://localhost:8000/dazzler/demo/-/roughnator
 
-You should see the dashboard you wired in earlier with an explanation
-of what it is and how it works. The dashboard fetches new data from
-Quantum Leap every few seconds, so as the simulator sends entities
-you should be able to see the new data points reflected in the plot.
+You should see the dashboard with an explanation of what it is and
+how it works. Load the available estimate entity IDs, then select
+one to plot the data. The dashboard fetches new data from Quantum
+Leap every few seconds, so as the simulator sends entities you should
+be able to see the new data points reflected in the plot.
+
+Likewise, if you browse to the VIQE dashboard at:
+
+- http://localhost:8000/dazzler/demo/-/viqe
+
+You should be able to monitor in real-time the VIQE inspection reports
+as the simulator produces them.
 
 
 
