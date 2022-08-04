@@ -4,7 +4,7 @@ from fipy.docker import DockerCompose
 from fipy.ngsi.quantumleap import QuantumLeapClient
 
 from tests.util.fiware import quantumleap_client, \
-    raw_material_inspection_batches_stream, roughness_estimate_batches_stream
+    inspection_demo_batches_stream, roughness_estimate_batches_stream
 
 
 docker = DockerCompose(__file__)
@@ -18,7 +18,7 @@ def bootstrap():
 def send_entities(quantumleap: QuantumLeapClient):
     try:
         batch = next(roughness_estimate_batches_stream) + \
-                next(raw_material_inspection_batches_stream)
+                next(inspection_demo_batches_stream)
         quantumleap.insert_entities(batch)
     except Exception as e:
         print(e)

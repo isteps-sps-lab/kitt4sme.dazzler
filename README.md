@@ -115,12 +115,14 @@ one to plot the data. The dashboard fetches new data from Quantum
 Leap every few seconds, so as the simulator sends entities you should
 be able to see the new data points reflected in the plot.
 
-Likewise, if you browse to the VIQE dashboard at:
+Likewise, if you browse to the Sleuth dashboard at:
 
-- http://localhost:8000/dazzler/demo/-/viqe
+- http://localhost:8000/dazzler/demo/-/sleuth
 
-You should be able to monitor in real-time the VIQE inspection reports
-as the simulator produces them.
+You should be able to monitor in real-time inspection reports as the
+simulator produces them. (Sleuth is a made-up AI service that inspects
+parts being machined to sniff out surface areas where defects are likely
+to be. Loosely based on the first implementation of VIQE.)
 
 
 
