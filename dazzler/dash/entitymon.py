@@ -134,7 +134,7 @@ class EntityMonitorDashboard(ABC):
         if not entity_id:
             return self._empty_fig()
 
-        df = self._quantumleap.fetch_data_frame(
+        df = self._quantumleap.fetch_entity_series(
             entity_id=entity_id, entity_type=self._entity_type,
             entries_from_latest=entries_from_latest
         )

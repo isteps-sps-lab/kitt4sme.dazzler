@@ -29,7 +29,7 @@ class QuantumLeapSource:
             ctx=fiware_context_for(app)
         )
 
-    def fetch_data_frame(self,
+    def fetch_entity_series(self,
             entity_id: str, entity_type: str,
             entries_from_latest: Optional[int] = None,
             from_timepoint: Optional[datetime] = None,
