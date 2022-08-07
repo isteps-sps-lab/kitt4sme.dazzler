@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from dash import Dash
 from fipy.ngsi.headers import FiwareContext
@@ -41,6 +41,22 @@ class QuantumLeapSource:
         )
         time_indexed_df = pd.DataFrame(r.dict()).set_index('index')
         return time_indexed_df
+
+    def fetch_entity_type_series(self,
+            entity_type: str,
+            entries_from_latest: Optional[int] = None,
+            from_timepoint: Optional[datetime] = None,
+            to_timepoint: Optional[datetime] = None) -> Dict[str, pd.DataFrame]:
+        rs = self._client.entity_type_series(
+            entity_type=entity_type,
+            entries_from_latest=entries_from_latest,
+            from_timepoint=from_timepoint, to_timepoint=to_timepoint
+        )
+        frames = {
+            entity_id : (pd.DataFrame(series.dict()))
+            for (entity_id, series) in rs.items()
+        }
+        return frames
 
     def fetch_entity_summaries(self, entity_type: Optional[str] = None) \
         -> List[BaseEntity]:
