@@ -17,7 +17,7 @@ class InspectionDemoEntity(BaseEntity):
     area: FloatAttr
 
 
-# RAW_MATERIAL_INSPECTION_TYPE = 'raw_material'
+RAW_MATERIAL_INSPECTION_TYPE = 'raw_material'
 
 # class RawMaterialInspectionEntity(BaseEntity):
 #     type = RAW_MATERIAL_INSPECTION_TYPE
