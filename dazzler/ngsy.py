@@ -27,7 +27,7 @@ RAW_MATERIAL_INSPECTION_TYPE = 'raw_material'
 #     conformance_indicator: FloatAttr
 
 
-# TWEEZERS_INSPECTION_TYPE = 'tweezers_measurement'
+TWEEZERS_INSPECTION_TYPE = 'tweezers_measurement'
 
 # class TweezersInspectionEntity(BaseEntity):
 #     type = TWEEZERS_INSPECTION_TYPE
