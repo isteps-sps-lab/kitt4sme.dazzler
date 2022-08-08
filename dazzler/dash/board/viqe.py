@@ -1,4 +1,5 @@
-from typing import Any, Dict
+from abc import abstractmethod
+from typing import Any, Dict, List
 
 from dash import Dash
 import pandas as pd
@@ -6,7 +7,7 @@ import plotly.express as px
 from pydantic import BaseModel
 
 from dazzler.dash.entitiesframe import EntitiesFrameDashboard
-from dazzler.ngsy import RAW_MATERIAL_INSPECTION_TYPE
+from dazzler.ngsy import RAW_MATERIAL_INSPECTION_TYPE, TWEEZERS_INSPECTION_TYPE
 
 
 class InspectionReport(BaseModel):
@@ -37,8 +38,7 @@ class ReportFrame:
 
     @staticmethod
     def _most_recent_row(entity_series: pd.DataFrame) -> pd.Series:
-        max_cols = entity_series.idxmax()
-        max_time_index = max_cols['index']
+        max_time_index = entity_series['index'].idxmax()
         return entity_series.iloc[max_time_index]
 
 # NOTE. Paranoia. There should always be exactly one inspection for each
@@ -67,19 +67,7 @@ class ReportFrame:
         return pd.DataFrame(rows)
 
 
-
-def raw_material_dash_builder(app: Dash) -> Dash:
-    return RawMaterialInspectionDashboard(app).build_dash_app()
-
-
-class RawMaterialInspectionDashboard(EntitiesFrameDashboard):
-
-    def __init__(self, app: Dash):
-        super().__init__(
-            app=app,
-            title='Raw Materials Inspection',
-            entity_type=RAW_MATERIAL_INSPECTION_TYPE
-        )
+class InspectionDashboard(EntitiesFrameDashboard):
 
     def empty_data_frame(self) -> pd.DataFrame:
         rows = [InspectionReport.empty().dict()]
@@ -97,9 +85,27 @@ class RawMaterialInspectionDashboard(EntitiesFrameDashboard):
         color_map = {True: 'coral', False: 'silver'}
         fig = px.bar(df, x=df.id, y=df.conformance,
                         color='scrap',
-                        color_discrete_map=color_map)
+                        color_discrete_map=color_map,
+                        hover_data=self._bar_hover_extra_fields())
         fig.update_layout(legend_title_text='Scrap?')
         return fig
+
+    @abstractmethod
+    def _bar_hover_extra_fields(self) -> List[str]:
+        pass
+
+
+class RawMaterialInspectionDashboard(InspectionDashboard):
+
+    def __init__(self, app: Dash):
+        super().__init__(
+            app=app,
+            title='Raw Materials Inspection',
+            entity_type=RAW_MATERIAL_INSPECTION_TYPE
+        )
+
+    def _bar_hover_extra_fields(self) -> List[str]:
+        return []
 
     def explanation(self) -> str:
         return \
@@ -119,3 +125,43 @@ class RawMaterialInspectionDashboard(EntitiesFrameDashboard):
         To plot inspections, select a time interval and then click on
         the "Load Entities" button.
         '''
+
+
+class TweezersInspectionDashboard(InspectionDashboard):
+
+    def __init__(self, app: Dash):
+        super().__init__(
+            app=app,
+            title='Tweezers Inspection',
+            entity_type=TWEEZERS_INSPECTION_TYPE
+        )
+
+    def _bar_hover_extra_fields(self) -> List[str]:
+        return ['spec']
+
+    def explanation(self) -> str:
+        return \
+        '''
+        This graph visualises tweezers inspections VIQE did in the selected
+        time interval.
+        Each inspection refers to a specific tweezers which is identified by
+        an ID label. There's a bar on the graph for each ID. The bar indicates
+        the degree to which the inspected item conforms to the spec. Zero means
+        no significant deviations from the spec, one means the item is probably
+        to be scrapped. The spec determines a conformance threshold `t` in
+        `(0, 1)` so items with a value less or equal to `t` conform to the spec
+        whereas values greater than `t` do not. Accordingly, a grey bar means
+        "below or equal to the threshold", whereas orange means "above the
+        threshold". To see which spec VIQE checked a pair of tweezers against,
+        just hover over the corresponding bar in the graph with the mouse.
+
+        To plot inspections, select a time interval and then click on the
+        "Load Entities" button.
+        '''
+
+def raw_material_dash_builder(app: Dash) -> Dash:
+    return RawMaterialInspectionDashboard(app).build_dash_app()
+
+
+def tweezers_dash_builder(app: Dash) -> Dash:
+    return TweezersInspectionDashboard(app).build_dash_app()
