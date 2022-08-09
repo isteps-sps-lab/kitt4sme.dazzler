@@ -21,8 +21,12 @@ class BoardAssembly(BaseModel):
     board_path: Optional[str]
 
 
-BOOTSTRAP_DEMO_BOARD = BoardAssembly(
-            builder='dazzler.dash.board.dbc_demo.dash_builder')
+def demo_boards() -> List[BoardAssembly]:
+    bootstrap_demo_board = BoardAssembly(
+        builder='dazzler.dash.board.dbc_demo.dash_builder')
+    return [bootstrap_demo_board]
+
+
 DEMO_TENANT_NAME = 'demo'
 
 CONFIG_FILE_ENV_VAR_NAME = 'DAZZLER_CONFIG'
@@ -30,9 +34,15 @@ CONFIG_FILE_ENV_VAR_NAME = 'DAZZLER_CONFIG'
 
 class Settings(BaseSettings):
     quantumleap_base_url: AnyHttpUrl = 'http://quantumleap:8668'
-    boards: Dict[TenantName, List[BoardAssembly]] = {
-        DEMO_TENANT_NAME: [BOOTSTRAP_DEMO_BOARD]
-    }
+    boards: Dict[TenantName, List[BoardAssembly]] = {}
+
+    @staticmethod
+    def demo_config() -> 'Settings':
+        cfg = Settings()
+        cfg.boards = {
+            DEMO_TENANT_NAME: demo_boards()
+        }
+        return cfg
 
     @staticmethod
     def load() -> 'Settings':
@@ -41,7 +51,8 @@ class Settings(BaseSettings):
             env_var_name=CONFIG_FILE_ENV_VAR_NAME, defaults={})
         if raw_settings:
             return Settings(**raw_settings)
-        return Settings()
+
+        return Settings.demo_config()
 
 
 def dazzler_config() -> Settings:

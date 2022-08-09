@@ -1,45 +1,40 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Dict
 
 from dash import Dash, Input, Output, dcc, html
 from dash.development.base_component import Component
 import dash_bootstrap_components as dbc
 import pandas as pd
 
+from dazzler.dash.components import has_triggered, datetime_local_input, \
+    from_datetime_local_input
 from dazzler.dash.wiring import BasePath
 from dazzler.dash.timeseries import QuantumLeapSource
 
 
-INTERVAL_COMPONENT_ID = 'interval-component'
-LOAD_BUTTON_ID = 'load-ids-button'
-ENTITY_SELECT_ID = 'entity-id'
-ENTRIES_INPUT_ID = 'entries-from-latest'
+LOAD_BUTTON_ID = 'load-button'
+ENTRIES_FROM_INPUT_ID = 'entries-from'
+ENTRIES_TO_INPUT_ID = 'entries-to'
 GRAPH_ID = 'graph'
 
 
-class EntityMonitorDashboard(ABC):
+class EntitiesFrameDashboard(ABC):
 
     def __init__(self, app: Dash,
-                    title: str, entity_type: str,
-                    refresh_rate_millis: int = 5*1000):
+                    title: str, entity_type: str):
         super().__init__()
         self._app = app
         self._title = title
         self._entity_type = entity_type
-        self._refresh_rate = refresh_rate_millis
         self._base_path = BasePath.from_board_app(app)
         self._quantumleap = QuantumLeapSource(app)
-
-    @abstractmethod
-    def empty_data_set(self) -> dict:
-        pass
 
     @abstractmethod
     def explanation(self) -> str:
         pass
 
     @abstractmethod
-    def make_figure(self, df: pd.DataFrame) -> Any:
+    def make_figure(self, entity_type_series: Dict[str, pd.DataFrame]) -> Any:
         pass
 
     def build_dash_app(self) -> Dash:
@@ -56,14 +51,13 @@ class EntityMonitorDashboard(ABC):
                     [
                         dbc.Col(self._build_card(), md=4),
                         dbc.Col(
-                            dcc.Graph(id=GRAPH_ID, figure=self._empty_fig()),
+                            dcc.Graph(id=GRAPH_ID,
+                                      figure=self.make_figure({})),
                             md=8
                         )
                     ],
                     align="center",
-                ),
-                dcc.Interval(id=INTERVAL_COMPONENT_ID,
-                             interval=self._refresh_rate, n_intervals=0)
+                )
             ],
             fluid=True
         )
@@ -82,60 +76,54 @@ class EntityMonitorDashboard(ABC):
                 html.Hr(),
                 dbc.Row([
                     dbc.Col(
-                        dbc.Button('Load Entity IDs', id=LOAD_BUTTON_ID,
-                                    n_clicks=0),
+                        dbc.Label('Entities from'),
                         md=4
                     ),
                     dbc.Col(
-                        dbc.Select(id=ENTITY_SELECT_ID, options=[],
-                                    placeholder='Select...'),
+                        datetime_local_input(ENTRIES_FROM_INPUT_ID),
                         md=8
                     )
                 ]),
                 html.P(),
                 dbc.Row([
                     dbc.Col(
-                        dbc.Input(id=ENTRIES_INPUT_ID, type='number',
-                                    value=100, min=1, max=1000, step=1),
+                        dbc.Label('Entities to'),
                         md=4
                     ),
                     dbc.Col(
-                        dbc.Label('entries from latest received data point.'),
+                        datetime_local_input(ENTRIES_TO_INPUT_ID),
                         md=8
+                    )
+                ]),
+                html.P(),
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Button('Load Entities', id=LOAD_BUTTON_ID,
+                                    n_clicks=0)
                     )
                 ])
             ],
             body=True
         )
 
-    def _empty_fig(self) -> Any:
-        data = self.empty_data_set()
-        df = pd.DataFrame(data).set_index('index')
-        return self.make_figure(df)
-
     def _build_callbacks(self):
         self._app.callback(
-            Output(ENTITY_SELECT_ID, 'options'),
-            Input(LOAD_BUTTON_ID, 'n_clicks')
-        )(self._populate_entity_ids)
-
-        self._app.callback(
             Output(GRAPH_ID, 'figure'),
-            Input(INTERVAL_COMPONENT_ID, 'n_intervals'),
-            Input(ENTITY_SELECT_ID, 'value'),
-            Input(ENTRIES_INPUT_ID, 'value')
+            Input(LOAD_BUTTON_ID, 'n_clicks'),
+            Input(ENTRIES_FROM_INPUT_ID, 'value'),
+            Input(ENTRIES_TO_INPUT_ID, 'value')
         )(self._update_graph)
 
-    def _populate_entity_ids(self, value) -> Any:
-        xs = self._quantumleap.fetch_entity_ids(entity_type=self._entity_type)
-        return [{'label': x, 'value': x} for x in xs]
+    def _update_graph(self, btn_clicks, entries_from, entries_to) -> Any:
+        frames = {}  # draw empty plot
 
-    def _update_graph(self, intervals, entity_id, entries_from_latest) -> Any:
-        if not entity_id:
-            return self._empty_fig()
+        if has_triggered(LOAD_BUTTON_ID):
+            from_time = from_datetime_local_input(entries_from)
+            to_time = from_datetime_local_input(entries_to)
+            if from_time and to_time:
+                frames = self._quantumleap.fetch_entity_type_series(
+                    entity_type=self._entity_type,
+                    from_timepoint=from_time, to_timepoint=to_time
+                )
 
-        df = self._quantumleap.fetch_entity_series(
-            entity_id=entity_id, entity_type=self._entity_type,
-            entries_from_latest=entries_from_latest
-        )
-        return self.make_figure(df)
+        return self.make_figure(frames)

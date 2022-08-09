@@ -3,5 +3,5 @@ boards:
   demo:
   - builder: dazzler.dash.board.roughnator.dash_builder
     board_path: roughnator
-  - builder: dazzler.dash.board.viqe.dash_builder
-    board_path: viqe
+  - builder: dazzler.dash.board.inspection_demo.dash_builder
+    board_path: sleuth
