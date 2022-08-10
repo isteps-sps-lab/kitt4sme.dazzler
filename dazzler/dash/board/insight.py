@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class IgFeature(BaseModel):
     """A named float value in a result matrix produced by Insight Generator.
-    Notice the data that makes up a named float is stored in matrix form
+    Notice the data that makes up a named float is stored in columnar format
     inside the NGSI structured value. This class represents that information
     in a format that's best for displaying in our dashboard.
     """
@@ -16,8 +16,8 @@ class IgFeature(BaseModel):
 
 class IgRecommendation(BaseModel):
     """A recommendation in a result matrix produced by Insight Generator.
-    Notice the data that makes up a recommendation is stored in matrix
-    form inside the NGSI structured value. This class represents that
+    Notice the data that makes up a recommendation is stored in columnar
+    format inside the NGSI structured value. This class represents that
     information in a format that's best for displaying in our dashboard.
     """
     kpi_name: str
@@ -25,13 +25,13 @@ class IgRecommendation(BaseModel):
     kpi_best: float
 
 
-class IgRecommendationMatrix:
-    """Converts a result matrix produced by Insight Generator to a format
+class IgRecommendationTable:
+    """Converts a result table produced by Insight Generator to a format
     that's best for displaying in our dashboard.
     """
 
     def __init__(self, results: dict):
-        """Create a new instance to convert the input matrix data.
+        """Create a new instance to convert the input table.
 
         Args:
             results: the value of the `Results` attribute of an NGSI
