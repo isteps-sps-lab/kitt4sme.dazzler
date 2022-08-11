@@ -1,4 +1,4 @@
-from dazzler.dash.board.insight import IgRecommendationTable
+from dazzler.dash.board.insight.model import IgRecommendationTable
 
 
 def example_ngsi_structured_value_1() -> dict:
