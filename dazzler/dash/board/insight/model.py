@@ -1,5 +1,6 @@
 from typing import Any, List
 
+import pandas as pd
 from pydantic import BaseModel
 
 
@@ -68,3 +69,36 @@ class IgRecommendationTable:
               for (n, fs, b) in arg_tuples]
 
         return rs
+
+
+class IgAnalysis:
+    """Holds an Insight Generator recommendation for a KPI as well as
+    a data frame containing the evolution of that KPI value over time.
+    """
+
+    def __init__(self, recommendation: IgRecommendation,
+                 kpi_over_time: pd.DataFrame):
+        """Create a new instance to hold a KPI recommendation and the KPI
+        evolution over time.
+
+        Notice for the dashboard to be able to plot the KPI over time, the
+        Pandas data frame must have the following structure:
+            * it holds data for a function `k(t)`---KPI value of time
+            * the `t` is the 'index' column which also has to be the Pandas
+              index
+            * `k(t)` is a column whose name is the same as
+              `recommendation.kpi_name`
+
+        Args:
+            recommendation: the Insight Generator recommendation for a KPI.
+            kpi_over_time: the latest KPI values recorded, usually for the
+                last 100 time points.
+        """
+        self._reco = recommendation
+        self._kpi = kpi_over_time
+
+    def recommendation(self) -> IgRecommendation:
+        return self._reco
+
+    def kpi_over_time(self) -> pd.DataFrame:
+        return self._kpi

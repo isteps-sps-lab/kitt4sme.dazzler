@@ -34,3 +34,6 @@ TWEEZERS_INSPECTION_TYPE = 'tweezers_measurement'
 #     okay: BoolAttr
 #     conformance_indicator: FloatAttr
 #     spec: TextAttr
+
+
+INSIGHT_TYPE = 'Insights'
