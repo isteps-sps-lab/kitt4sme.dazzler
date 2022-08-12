@@ -124,6 +124,10 @@ simulator produces them. (Sleuth is a made-up AI service that inspects
 parts being machined to sniff out surface areas where defects are likely
 to be. Loosely based on the first implementation of VIQE.)
 
+Finally, there's a tech-preview dashboard for Insight Generator at
+
+- http://localhost:8000/dazzler/demo/-/insight/
+
 
 
 
