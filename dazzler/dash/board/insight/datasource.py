@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+from random import uniform
 from typing import List
 
 from dash import Dash
@@ -31,17 +33,29 @@ class IgDataSource:
         )
         ngsi_results = df.get('Results', {}).get(0, {})
         recos = IgRecommendationTable(ngsi_results).to_recommendations()
-        kpis = []  # TODO where are the KPI datasets supposed to come from?!
+        kpis = [self.make_kpi_frame(r) for r in recos]
 
         return [IgAnalysis(r, k) for (r, k) in zip(recos, kpis)]
 
-# TODO. Clarify what data KPI graphs should plot. The CSIC mockup seem to
-# plot the KPI best value as a constant function of time---i.e. k(t) = best.
-# Not sure that's what they meant, so another possibility is that for each
-# KPI listed in the Results structured value, there's a corresponding time
-# series to fetch. This is what we do in the implementation of the demo
-# datasource, but obviously, that's just my interpretation which could be
-# wrong!
+    @staticmethod
+    def make_kpi_frame(reco: IgRecommendation) -> pd.DataFrame:
+        today = datetime.today()
+        tix = [today - timedelta(days=k) for k in range(10)]
+        data = {
+            'index': tix,
+            reco.kpi_name: [reco.kpi_best for _ in tix]
+        }
+        return pd.DataFrame(data=data).set_index('index')
+
+# NOTE. KPI frames.
+# For the initial Insight release, a KPI dataset over time is just a
+# constant function of time---i.e. k(t) = best. Going forward another
+# possibility is that for each KPI listed in the Results structured
+# value, there's a corresponding time series to fetch. (This is what
+# we do in the implementation of the demo datasource.)
+# For that to work, we'd need a way to turn each KPI data point Insight
+# fetches from its data file into an NGSI entity and send that entity to
+# Orion so Quantum Leap can generate a KPI time series.
 
 
 class IgDemoDataSource(IgDataSource):
@@ -97,9 +111,6 @@ def example_ngsi_structured_value_2() -> dict:
 
 
 def make_example_kpi_over_time(kpi_name: str, kpi_best: float) -> pd.DataFrame:
-    from datetime import datetime
-    from random import uniform
-
     raw_tix = [
         "2022-03-28T18:03:18.923+00:00", "2022-03-28T18:03:20.458+00:00",
         "2022-03-28T18:03:22.011+00:00", "2022-03-28T18:03:24.011+00:00",

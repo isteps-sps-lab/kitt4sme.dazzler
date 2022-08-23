@@ -179,11 +179,14 @@ class RecommendationDashboard:
 
 
 def dash_builder(app: Dash) -> Dash:
-    datasource = IgDemoDataSource(app)  # TODO IgDataSource(app)
+    datasource = IgDataSource(app)
     board = RecommendationDashboard(app, datasource)
     return board.build_dash_app()
-# TODO. When we know what to do for KPI graphs, use IgDataSource instead
-# of the demo data!
+
+def dash_demo_builder(app: Dash) -> Dash:
+    datasource = IgDemoDataSource(app)
+    board = RecommendationDashboard(app, datasource)
+    return board.build_dash_app()
 
 
 RECOMMENDATION_DASHBOARD_EXPLANATION = '''
