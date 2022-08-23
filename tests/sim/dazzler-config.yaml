@@ -1,7 +1,7 @@
 quantumleap_base_url: http://quantumleap:8668
 boards:
   demo:
-  - builder: dazzler.dash.board.insight.dash_builder
+  - builder: dazzler.dash.board.insight.dash_demo_builder
     board_path: insight
   - builder: dazzler.dash.board.roughnator.dash_builder
     board_path: roughnator
