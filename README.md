@@ -124,9 +124,20 @@ simulator produces them. (Sleuth is a made-up AI service that inspects
 parts being machined to sniff out surface areas where defects are likely
 to be. Loosely based on the first implementation of VIQE.)
 
-Finally, there's a tech-preview dashboard for Insight Generator at
+Finally, we've got a demo for the Insight Generator dashboard too.
+In this demo, the simulator sends Insight entities to Orion and the
+dashboard picks them up and displays them at
 
 - http://localhost:8000/dazzler/demo/-/insight/
+
+You'll notice the KPI graphs are always a horizontal line. This is
+because for the initial Insight release, a KPI dataset over time is
+just a constant function of time---i.e. `k(t) = best`. Going forward
+another possibility is that for each KPI listed in the `Results`
+structured value, there's a corresponding time series to fetch. We
+also have a tech preview for this scenario at
+
+- http://localhost:8000/dazzler/demo/-/insight-preview/
 
 
 
