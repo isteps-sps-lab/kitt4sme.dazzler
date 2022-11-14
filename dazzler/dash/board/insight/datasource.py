@@ -6,7 +6,7 @@ from dash import Dash
 
 from dazzler.dash.board.insight.model import *
 from dazzler.dash.wiring import BasePath
-from dazzler.dash.timeseries import QuantumLeapSource
+from dazzler.dash.fiware import QuantumLeapSource
 from dazzler.ngsy import INSIGHT_TYPE
 
 
