@@ -3,7 +3,8 @@ from typing import Dict, List, Optional
 
 from dash import Dash
 from fipy.ngsi.headers import FiwareContext
-from fipy.ngsi.entity import BaseEntity
+from fipy.ngsi.entity import BaseEntity, Entity
+from fipy.ngsi.orion import OrionClient
 from fipy.ngsi.quantumleap import QuantumLeapClient
 import pandas as pd
 from uri import URI
@@ -65,3 +66,19 @@ class QuantumLeapSource:
     def fetch_entity_ids(self, entity_type: str) -> List[str]:
         xs = self.fetch_entity_summaries(entity_type=entity_type)
         return [x.id for x in xs]
+
+
+class OrionSource:
+
+    def __init__(self, app: Dash):
+        cfg = dazzler_config()
+        self._client = OrionClient(
+            base_url=URI(str(cfg.orion_base_url)),
+            ctx=fiware_context_for(app)
+        )
+
+    def fetch_entity_ids(self, entity_type: str) -> List[str]:
+        return self._client.list_entity_ids(entity_type)
+
+    def fetch_entity(self, like: Entity) -> Optional[Entity]:
+        return self._client.fetch_entity(like)
