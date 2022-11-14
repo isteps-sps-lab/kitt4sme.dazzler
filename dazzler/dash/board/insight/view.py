@@ -101,7 +101,7 @@ class RecommendationDashboard:
     ENTITY_SELECT_ID = 'entity-id'
     ANALYSIS_TABS_CONTAINER_ID = 'analysis-tabs'
 
-    def __init__(self, app: Dash, datasource: IgDataSource):
+    def __init__(self, app: Dash, datasource: IgBaseDataSource):
         self._app = app
         self._datasource = datasource
         self._title = 'Insight Generator Report'
@@ -179,7 +179,7 @@ class RecommendationDashboard:
 
 
 def dash_builder(app: Dash) -> Dash:
-    datasource = IgDataSource(app)
+    datasource = IgOrionDataSource(app)
     board = RecommendationDashboard(app, datasource)
     return board.build_dash_app()
 
