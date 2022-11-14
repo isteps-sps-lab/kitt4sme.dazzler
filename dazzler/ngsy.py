@@ -1,4 +1,7 @@
-from fipy.ngsi.entity import BaseEntity, BoolAttr, FloatAttr, TextAttr
+from typing import Optional
+
+from fipy.ngsi.entity import BaseEntity, BoolAttr, FloatAttr, \
+    StructuredValueAttr
 
 
 ROUGHNESS_ESTIMATE_TYPE = 'RoughnessEstimate'
@@ -37,3 +40,7 @@ TWEEZERS_INSPECTION_TYPE = 'tweezers_measurement'
 
 
 INSIGHT_TYPE = 'Insights'
+
+class InsightEntity(BaseEntity):
+    type = INSIGHT_TYPE
+    Results: Optional[StructuredValueAttr]
