@@ -1,24 +1,91 @@
+from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
+from random import uniform
 from typing import List
 
 from dash import Dash
 
 from dazzler.dash.board.insight.model import *
 from dazzler.dash.wiring import BasePath
-from dazzler.dash.timeseries import QuantumLeapSource
-from dazzler.ngsy import INSIGHT_TYPE
+from dazzler.dash.fiware import OrionSource, QuantumLeapSource
+from dazzler.ngsy import INSIGHT_TYPE, InsightEntity
 
 
-class IgDataSource:
+class IgBaseDataSource(ABC):
 
     def __init__(self, app: Dash):
         self._base_path = BasePath.from_board_app(app)
-        self._quantumleap = QuantumLeapSource(app)
 
     def tenant(self) -> str:
         return self._base_path.tenant()
 
     def service_path(self) -> str:
         return self._base_path.service_path()
+
+    @abstractmethod
+    def load_insight_entity_ids(self) -> List[str]:
+        pass
+
+    @abstractmethod
+    def load_analyses_for(self, entity_id: str) -> List[IgAnalysis]:
+        pass
+
+    @staticmethod
+    def make_kpi_frame(reco: IgRecommendation) -> pd.DataFrame:
+        today = datetime.today()
+        tix = [today - timedelta(days=k) for k in range(10)]
+        data = {
+            'index': tix,
+            reco.kpi_name: [reco.kpi_best for _ in tix]
+        }
+        return pd.DataFrame(data=data).set_index('index')
+
+# NOTE. KPI frames.
+# For the initial Insight release, a KPI dataset over time is just a
+# constant function of time---i.e. k(t) = best. Going forward another
+# possibility is that for each KPI listed in the Results structured
+# value, there's a corresponding time series to fetch. (This is what
+# we do in the implementation of the demo datasource.)
+# For that to work, we'd need a way to turn each KPI data point Insight
+# fetches from its data file into an NGSI entity and send that entity to
+# Orion so Quantum Leap can generate a KPI time series.
+
+
+class IgOrionDataSource(IgBaseDataSource):
+
+    def __init__(self, app: Dash):
+        super().__init__(app)
+        self._orion = OrionSource(app)
+
+    def load_insight_entity_ids(self) -> List[str]:
+        ids = self._orion.fetch_entity_ids(entity_type=INSIGHT_TYPE)
+        return ids
+
+    def load_analyses_for(self, entity_id: str) -> List[IgAnalysis]:
+        like = InsightEntity(id=entity_id)
+        entity = self._orion.fetch_entity(like)
+
+        if entity and entity.Results:
+            payload = entity.Results.value
+            recos = IgRecommendationTable(payload).to_recommendations()
+            kpis = [self.make_kpi_frame(r) for r in recos]
+
+            return [IgAnalysis(r, k) for (r, k) in zip(recos, kpis)]
+
+        return []
+
+
+class IgQlDataSource(IgBaseDataSource):
+# NOTE. Not used at the moment.
+# This is b/c Insight entities can't be saved to a QL CrateDB backend:
+# - https://github.com/c0c0n3/kitt4sme.live/issues/186
+# Since at the moment we don't actually need time series for this entity
+# type, it's best to source data from Orion as it'll always work regardless
+# of the QL DB backend.
+
+    def __init__(self, app: Dash):
+        super().__init__(app)
+        self._quantumleap = QuantumLeapSource(app)
 
     def load_insight_entity_ids(self) -> List[str]:
         ids = self._quantumleap.fetch_entity_ids(entity_type=INSIGHT_TYPE)
@@ -31,20 +98,12 @@ class IgDataSource:
         )
         ngsi_results = df.get('Results', {}).get(0, {})
         recos = IgRecommendationTable(ngsi_results).to_recommendations()
-        kpis = []  # TODO where are the KPI datasets supposed to come from?!
+        kpis = [self.make_kpi_frame(r) for r in recos]
 
         return [IgAnalysis(r, k) for (r, k) in zip(recos, kpis)]
 
-# TODO. Clarify what data KPI graphs should plot. The CSIC mockup seem to
-# plot the KPI best value as a constant function of time---i.e. k(t) = best.
-# Not sure that's what they meant, so another possibility is that for each
-# KPI listed in the Results structured value, there's a corresponding time
-# series to fetch. This is what we do in the implementation of the demo
-# datasource, but obviously, that's just my interpretation which could be
-# wrong!
 
-
-class IgDemoDataSource(IgDataSource):
+class IgDemoDataSource(IgBaseDataSource):
 
     def __init__(self, app: Dash):
         super().__init__(app)
@@ -97,9 +156,6 @@ def example_ngsi_structured_value_2() -> dict:
 
 
 def make_example_kpi_over_time(kpi_name: str, kpi_best: float) -> pd.DataFrame:
-    from datetime import datetime
-    from random import uniform
-
     raw_tix = [
         "2022-03-28T18:03:18.923+00:00", "2022-03-28T18:03:20.458+00:00",
         "2022-03-28T18:03:22.011+00:00", "2022-03-28T18:03:24.011+00:00",

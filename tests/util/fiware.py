@@ -1,18 +1,23 @@
 from uri import URI
 from typing import Generator, List
 
+from fipy.ngsi.entity import StructuredValueAttr
 from fipy.ngsi.headers import FiwareContext
+from fipy.ngsi.orion import OrionClient
 from fipy.ngsi.quantumleap import QuantumLeapClient
 from fipy.sim.generator import BoolAttr, float_attr_close_to, \
     EntityFactory, entity_batch
-from fipy.wait import wait_for_quantumleap
 
-from dazzler.ngsy import InspectionDemoEntity, RoughnessEstimateEntity
+from dazzler.dash.board.insight.datasource import \
+    example_ngsi_structured_value_1, example_ngsi_structured_value_2
+from dazzler.ngsy import InsightEntity, InspectionDemoEntity, \
+    RoughnessEstimateEntity
 
 
 TENANT = 'demo'
 QUANTUMLEAP_INTERNAL_BASE_URL = 'http://quantumleap:8668'
 QUANTUMLEAP_EXTERNAL_BASE_URL = 'http://localhost:8668'
+ORION_EXTERNAL_BASE_URL = 'http://localhost:1026'
 
 
 def quantumleap_client() -> QuantumLeapClient:
@@ -23,9 +28,10 @@ def quantumleap_client() -> QuantumLeapClient:
 # service path in our tests. But when Orion notifies QL, it sends along a
 # root service path. So we add it to the context to make queries work.
 
-
-def wait_on_quantumleap():
-    wait_for_quantumleap(quantumleap_client())
+def orion_client() -> OrionClient:
+    base_url = URI(ORION_EXTERNAL_BASE_URL)
+    ctx = FiwareContext(service=TENANT, service_path='/')
+    return OrionClient(base_url, ctx)
 
 
 def mk_roughness_estimate() -> RoughnessEstimateEntity:
@@ -66,3 +72,30 @@ def mk_inspection_demo_batches_stream() \
 
 
 inspection_demo_batches_stream = mk_inspection_demo_batches_stream()
+
+
+class InsightEntityGenerator:
+
+    def __init__(self):
+        self.count = -1
+        self.payload = [ example_ngsi_structured_value_1(),
+                         example_ngsi_structured_value_2() ]
+
+    def mk_demo(self) -> InsightEntity:
+        self.count = self.count + 1
+        value = self.payload[self.count % 2]
+        return InsightEntity(
+            id='',
+            Results=StructuredValueAttr.new(value)
+        )
+
+
+def mk_insight_demo_batches_stream() \
+    -> Generator[List[InsightEntity], None, None]:
+    factory = EntityFactory.with_numeric_suffixes(
+        how_many=2, generator=InsightEntityGenerator().mk_demo
+    )
+    return entity_batch(factory)
+
+
+insight_demo_batches_stream = mk_insight_demo_batches_stream()

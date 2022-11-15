@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 
 from dazzler.dash.wiring import BasePath
-from dazzler.dash.timeseries import QuantumLeapSource
+from dazzler.dash.fiware import QuantumLeapSource
 
 
 INTERVAL_COMPONENT_ID = 'interval-component'

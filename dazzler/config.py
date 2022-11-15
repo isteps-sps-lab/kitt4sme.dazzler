@@ -33,6 +33,7 @@ CONFIG_FILE_ENV_VAR_NAME = 'DAZZLER_CONFIG'
 
 
 class Settings(BaseSettings):
+    orion_base_url: AnyHttpUrl = 'http://orion:1026'
     quantumleap_base_url: AnyHttpUrl = 'http://quantumleap:8668'
     boards: Dict[TenantName, List[BoardAssembly]] = {}
 

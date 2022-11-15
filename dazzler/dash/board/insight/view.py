@@ -101,7 +101,7 @@ class RecommendationDashboard:
     ENTITY_SELECT_ID = 'entity-id'
     ANALYSIS_TABS_CONTAINER_ID = 'analysis-tabs'
 
-    def __init__(self, app: Dash, datasource: IgDataSource):
+    def __init__(self, app: Dash, datasource: IgBaseDataSource):
         self._app = app
         self._datasource = datasource
         self._title = 'Insight Generator Report'
@@ -179,11 +179,14 @@ class RecommendationDashboard:
 
 
 def dash_builder(app: Dash) -> Dash:
-    datasource = IgDemoDataSource(app)  # TODO IgDataSource(app)
+    datasource = IgOrionDataSource(app)
     board = RecommendationDashboard(app, datasource)
     return board.build_dash_app()
-# TODO. When we know what to do for KPI graphs, use IgDataSource instead
-# of the demo data!
+
+def dash_demo_builder(app: Dash) -> Dash:
+    datasource = IgDemoDataSource(app)
+    board = RecommendationDashboard(app, datasource)
+    return board.build_dash_app()
 
 
 RECOMMENDATION_DASHBOARD_EXPLANATION = '''

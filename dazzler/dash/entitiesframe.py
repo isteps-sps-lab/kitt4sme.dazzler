@@ -9,7 +9,7 @@ import pandas as pd
 from dazzler.dash.components import has_triggered, datetime_local_input, \
     from_datetime_local_input
 from dazzler.dash.wiring import BasePath
-from dazzler.dash.timeseries import QuantumLeapSource
+from dazzler.dash.fiware import QuantumLeapSource
 
 
 LOAD_BUTTON_ID = 'load-button'
