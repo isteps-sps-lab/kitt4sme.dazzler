@@ -1,15 +1,19 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 import base64
-import datetime
+from datetime import datetime, timedelta
+from typing import Optional
 
 import cv2
+import dash_bootstrap_components as dbc
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import dash_bootstrap_components as dbc
-from dash_bootstrap_templates import load_figure_template
 from dash import Dash, html, dcc, Output, Input
+from dash_bootstrap_templates import load_figure_template
+from fipy.ngsi.headers import FiwareContext
+from fipy.ngsi.quantumleap import QuantumLeapClient
+from uri import URI
 
 THEME = [dbc.themes.SLATE]
 load_figure_template("slate")
@@ -45,6 +49,14 @@ app = Dash(
     suppress_callback_exceptions=False,
     prevent_initial_callbacks=False,
     external_stylesheets=THEME
+)
+
+_quantumleap = QuantumLeapClient(
+    base_url=URI("http://quantumleap:8668"),
+    ctx=FiwareContext(
+        # service=base_path.tenant(),
+        service_path="/"
+    )
 )
 
 app.layout = dbc.Container(
@@ -112,6 +124,19 @@ app.layout = dbc.Container(
 )
 
 
+def fetch_entity_series(entity_id: str, entity_type: str,
+                        entries_from_latest: Optional[int] = None,
+                        from_timepoint: Optional[datetime] = None,
+                        to_timepoint: Optional[datetime] = None) -> pd.DataFrame:
+    r = _quantumleap.entity_series(
+        entity_id=entity_id, entity_type=entity_type,
+        entries_from_latest=entries_from_latest,
+        from_timepoint=from_timepoint, to_timepoint=to_timepoint
+    )
+    time_indexed_df = pd.DataFrame(r.dict()).set_index('index')
+    return time_indexed_df
+
+
 @app.callback(Output('config', 'children'),
               Input('config-interval', 'n_intervals'))
 def update_config(n):
@@ -123,21 +148,31 @@ def update_config(n):
 @app.callback(Output('fatigue', 'figure'),
               Input('graphs-interval', 'n_intervals'))
 def update_fatigue(n):
-    fatigue = pd.DataFrame({
-        "Fatigue": np.random.randint(10, size=10),
-        "Date": pd.date_range(datetime.datetime.now() - datetime.timedelta(seconds=10), periods=10, freq='S')
-    })
-    return px.line(fatigue, x="Date", y="Fatigue", markers=True, color_discrete_sequence=['coral'])
+    fatigue = fetch_entity_series(
+        entity_id="12345", entity_type="Worker",
+        entries_from_latest=10,
+        # from_timepoint=datetime.now() - timedelta(seconds=60) - timedelta(hours=1),
+        # to_timepoint=datetime.now() - timedelta(hours=1)
+    )
+
+    fatigue = fatigue.workerStates.apply(lambda x: x["fatigue"]["level"]["value"] if x else x).rename("Fatigue")
+
+    return px.line(fatigue, x=fatigue.index, y="Fatigue", markers=True, color_discrete_sequence=['coral'])
 
 
 @app.callback(Output('buffer', 'figure'),
               Input('graphs-interval', 'n_intervals'))
 def update_buffer(n):
-    buffer = pd.DataFrame({
-        "Buffer": np.random.randint(4, size=7),
-        "Date": pd.date_range(datetime.datetime.now() - datetime.timedelta(seconds=7), periods=7, freq='S')
-    })
-    return px.line(buffer, x="Date", y="Buffer", markers=True, color_discrete_sequence=['silver'])
+    buffer = fetch_entity_series(
+        entity_id="EquipmentIoTMeasurement1", entity_type="EquipmentIoTMeasurement",
+        entries_from_latest=10,
+        # from_timepoint=datetime.now() - timedelta(seconds=60) - timedelta(hours=1),
+        # to_timepoint=datetime.now() - timedelta(hours=1)
+    )
+
+    buffer = buffer.fields.apply(lambda x: x["bufferLevel"]["t2"] if x else x).rename("Buffer")
+
+    return px.line(buffer, x=buffer.index, y="Buffer", markers=True, color_discrete_sequence=['silver'])
 
 
 if __name__ == '__main__':
