@@ -12,8 +12,11 @@ import plotly.express as px
 from dash import Dash, html, dcc, Output, Input
 from dash_bootstrap_templates import load_figure_template
 from fipy.ngsi.headers import FiwareContext
+from fipy.ngsi.orion import OrionClient
 from fipy.ngsi.quantumleap import QuantumLeapClient
 from uri import URI
+
+from entities import TaskExecutionEntity
 
 THEME = [dbc.themes.SLATE]
 load_figure_template("slate")
@@ -51,13 +54,35 @@ app = Dash(
     external_stylesheets=THEME
 )
 
+_orion_client = OrionClient(
+    URI("http://quantumleap:8668"),
+    FiwareContext(service=None, service_path=None, correlator=None))
+
 _quantumleap = QuantumLeapClient(
-    base_url=URI("http://quantumleap:8668"),
+    base_url=URI("http://orion:1026"),
     ctx=FiwareContext(
         # service=base_path.tenant(),
         service_path="/"
     )
 )
+
+
+def get_new_screwing_sequence():
+    interventions = _orion_client.list_entities_of_type(TaskExecutionEntity(id=''))
+    intervention = interventions[len(interventions) - 1]
+    # print(intervention)
+    array = intervention.additional_parameters.value["sequence"]
+    # print(array)
+
+    # indexes = [index for index, char in enumerate(array)
+    #            if char == 1]
+    # result = [x + 1 for x in indexes]
+    #
+    # result.append(10)
+    #
+    # print(result)
+    return array
+
 
 app.layout = dbc.Container(
     [
@@ -141,7 +166,7 @@ def fetch_entity_series(entity_id: str, entity_type: str,
               Input('config-interval', 'n_intervals'))
 def update_config(n):
     return [
-        html.Img(src='data:image/png;base64,{}'.format(_update_config(np.random.randint(2, size=9)))),
+        html.Img(src='data:image/png;base64,{}'.format(_update_config(get_new_screwing_sequence()))),
     ]
 
 
