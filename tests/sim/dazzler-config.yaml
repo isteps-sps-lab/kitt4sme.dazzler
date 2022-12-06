@@ -10,3 +10,5 @@ boards:
     board_path: roughnator
   - builder: dazzler.dash.board.inspection_demo.dash_builder
     board_path: sleuth
+  - builder: dazzler.dash.board.smartcollaboration.dash_builder
+    board_path: smart-collaboration
