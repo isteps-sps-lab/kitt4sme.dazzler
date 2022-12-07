@@ -85,10 +85,9 @@ class SmartCollaborationDashboard:
                                             n_intervals=0
                                         )
                                     ],
-                                    align="center"
+                                    align="center",
+                                    class_name="mb-3",  # bottom spacing
                                 ),
-                                # html.Hr(),
-                                html.Br(),
                                 dbc.Row(
                                     [
                                         dbc.Col(
@@ -118,7 +117,8 @@ class SmartCollaborationDashboard:
                     ],
                 ),
             ],
-            fluid=False
+            fluid=False,
+            class_name='p-3'  # padding
         )
 
     def _build_callbacks(self):
