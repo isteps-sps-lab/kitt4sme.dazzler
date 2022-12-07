@@ -1,19 +1,14 @@
 import base64
 import os
-from datetime import datetime
-from typing import Optional
 
 import cv2
 import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 from dash import Dash, html, dcc, Output, Input
-from fipy.ngsi.headers import FiwareContext
-from fipy.ngsi.orion import OrionClient
-from fipy.ngsi.quantumleap import QuantumLeapClient
-from uri import URI
 
 from dazzler.dash.board.smartcollaboration.entities import TaskExecutionEntity
+from dazzler.dash.fiware import QuantumLeapSource, OrionSource
 
 
 def dash_builder(app: Dash) -> Dash:
@@ -35,17 +30,8 @@ class SmartCollaborationDashboard:
                               (485, 250, 517, 282),
                               (150, 368, 182, 400),
                               (345, 410, 377, 442)]
-        self._orion_client = OrionClient(
-            URI("http://quantumleap:8668"),  # todo read from env
-            FiwareContext(service=None, service_path=None, correlator=None))
-
-        self._quantumleap = QuantumLeapClient(
-            base_url=URI("http://orion:1026"),  # todo read from env
-            ctx=FiwareContext(
-                # service=base_path.tenant(),
-                service_path="/"
-            )
-        )
+        self._orion = OrionSource(app)
+        self._quantumleap = QuantumLeapSource(app)
 
     def build_dash_app(self) -> Dash:
         self._build_layout()
@@ -137,22 +123,12 @@ class SmartCollaborationDashboard:
             Input('graphs-interval', 'n_intervals'),
         )(self._update_buffer)
 
-    def _fetch_entity_series(self, entity_id: str, entity_type: str,
-                             entries_from_latest: Optional[int] = None,
-                             from_timepoint: Optional[datetime] = None,
-                             to_timepoint: Optional[datetime] = None) -> pd.DataFrame:
-        r = self._quantumleap.entity_series(
-            entity_id=entity_id, entity_type=entity_type,
-            entries_from_latest=entries_from_latest,
-            from_timepoint=from_timepoint, to_timepoint=to_timepoint
-        )
-        time_indexed_df = pd.DataFrame(r.dict()).set_index('index')
-        return time_indexed_df
-
     def _update_config(self, n):
-        interventions = self._orion_client.list_entities_of_type(TaskExecutionEntity(id=''))  # todo read from dashboard
-        intervention = interventions[len(interventions) - 1]
-        last_configuration = intervention.additional_parameters.value["sequence"]
+        task_execution = TaskExecutionEntity(id='')
+        interventions = self._orion.fetch_entity_ids(task_execution.type)  # todo read ID from dashboard
+        task_execution.id = interventions[-1]
+        intervention = self._orion.fetch_entity(task_execution)
+        last_configuration = intervention.additionalParameters.value["sequence"]
         img = cv2.imread(self._input_path)
         for position, present in zip(self._screw_coords, last_configuration):
             if present == 1:
@@ -167,8 +143,8 @@ class SmartCollaborationDashboard:
         ]
 
     def _update_fatigue(self, _):
-        fatigue = self._fetch_entity_series(
-            entity_id="12345",  # todo read from dashboard
+        fatigue = self._quantumleap.fetch_entity_series(
+            entity_id="urn:ngsi-ld:Worker:1",  # todo read from dashboard
             entity_type="Worker",
             entries_from_latest=10,
             # from_timepoint=datetime.now() - timedelta(seconds=60) - timedelta(hours=1),
@@ -179,8 +155,8 @@ class SmartCollaborationDashboard:
         return self._fatigue_fig(fatigue)
 
     def _update_buffer(self, _):
-        buffer = self._fetch_entity_series(
-            entity_id="EquipmentIoTMeasurement1",  # todo read from dashboard
+        buffer = self._quantumleap.fetch_entity_series(
+            entity_id="urn:ngsi-ld:EquipmentIoTMeasurement:1",  # todo read from dashboard
             entity_type="EquipmentIoTMeasurement",
             entries_from_latest=10,
             # from_timepoint=datetime.now() - timedelta(seconds=60) - timedelta(hours=1),
@@ -192,13 +168,13 @@ class SmartCollaborationDashboard:
         return self._buffer_fig(buffer)
 
     def _config_fig(self, img=None):
-        if not img:
+        if img is None:  # The truth value of a Series is ambiguous
             img = cv2.imread(self._input_path)
 
         return f"data:image/png;base64,{base64.b64encode(cv2.imencode('.jpg', img)[1]).decode('ascii')}"
 
     def _fatigue_fig(self, df=None):
-        if not df:
+        if df is None:  # The truth value of a Series is ambiguous
             empty_fatigue = {
                 'timestamp': [],
                 'fatigue': [],
@@ -207,7 +183,7 @@ class SmartCollaborationDashboard:
         return px.line(df, x=df.index, y="fatigue", markers=True, color_discrete_sequence=['coral'])
 
     def _buffer_fig(self, df=None):
-        if not df:
+        if df is None:  # The truth value of a Series is ambiguous
             empty_buffer = {
                 'timestamp': [],
                 'buffer': [],

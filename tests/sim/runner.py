@@ -4,6 +4,8 @@ from fipy.docker import DockerCompose
 from fipy.ngsi.orion import OrionClient
 from fipy.ngsi.quantumleap import QuantumLeapClient
 
+from dazzler.dash.board.smartcollaboration.entities import smart_collaboration_demo_task_batches_stream, \
+    smart_collaboration_demo_worker_batches_stream, smart_collaboration_demo_iot_batches_stream
 from tests.util.fiware import quantumleap_client, \
     inspection_demo_batches_stream, roughness_estimate_batches_stream, \
     orion_client, insight_demo_batches_stream
@@ -19,11 +21,14 @@ def bootstrap():
 
 def send_entities(quantumleap: QuantumLeapClient, orion: OrionClient):
     try:
-        batch = next(insight_demo_batches_stream)
+        batch = next(insight_demo_batches_stream) + \
+                next(smart_collaboration_demo_task_batches_stream)
         orion.upsert_entities(batch)
 
         batch = next(roughness_estimate_batches_stream) + \
-                next(inspection_demo_batches_stream)
+                next(inspection_demo_batches_stream) + \
+                next(smart_collaboration_demo_worker_batches_stream) + \
+                next(smart_collaboration_demo_iot_batches_stream)
         quantumleap.insert_entities(batch)
     except Exception as e:
         print(e)
