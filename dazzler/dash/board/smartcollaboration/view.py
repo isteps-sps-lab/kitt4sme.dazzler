@@ -9,6 +9,7 @@ from dash import Dash, html, dcc, Output, Input
 
 from dazzler.dash.board.smartcollaboration.entities import TaskExecutionEntity
 from dazzler.dash.fiware import QuantumLeapSource, OrionSource
+from dazzler.dash.wiring import BasePath
 
 
 def dash_builder(app: Dash) -> Dash:
@@ -32,6 +33,7 @@ class SmartCollaborationDashboard:
                               (345, 410, 377, 442)]
         self._orion = OrionSource(app)
         self._quantumleap = QuantumLeapSource(app)
+        self._base_path = BasePath.from_board_app(app)
 
     def build_dash_app(self) -> Dash:
         self._build_layout()
@@ -41,23 +43,20 @@ class SmartCollaborationDashboard:
     def _build_layout(self):
         self._app.layout = dbc.Container(
             [
-                html.H1("Smart Collaboration Dashboard"),
-
+                dbc.Row([
+                    html.H1(self._base_path.tenant()),
+                    html.H2(f"service path: {self._base_path.service_path()}"),
+                    dcc.Markdown(
+                        '''
+                                This graph shows the current levels of **fatigue** and **buffer**.
+                                Also, it shows to the operator the current screw-driving configuration
+                                (**green boxes** are assigned to the operator)
+                        '''
+                    ),
+                ]),
+                html.Hr(),
                 dbc.Row(
                     [
-                        dbc.Col(
-                            # dbc.Card(
-                            dcc.Markdown(
-                                '''
-                                        This graph shows the current levels of **fatigue** and **buffer**.
-                                        Also, it shows to the operator the current screw-driving configuration
-                                        (**green boxes** are assigned to the operator)
-                                '''
-                            ),
-                            # body=False
-                            # ),
-                            md=12),
-                        html.Hr(),
                         dbc.Col(
                             [
                                 dbc.Row(
@@ -76,17 +75,29 @@ class SmartCollaborationDashboard:
                                 ),
                                 dbc.Row(
                                     [
-                                        dbc.Col(
+                                        dbc.Col([
+                                            dbc.Select(
+                                                id='config-worker-id',
+                                                # todo read options from orion
+                                                options=[{'label': 'urn:ngsi-ld:Worker:1',
+                                                          'value': 'urn:ngsi-ld:Worker:1'}],
+                                                placeholder='Select worker...'),
                                             dcc.Graph(
                                                 id='fatigue',
                                                 figure=self._fatigue_fig()
-                                            ),
+                                            )],
                                             md=6),
-                                        dbc.Col(
+                                        dbc.Col([
+                                            dbc.Select(
+                                                id='config-iot-id',
+                                                # todo read options from orion
+                                                options=[{'label': 'urn:ngsi-ld:EquipmentIoTMeasurement:1',
+                                                          'value': 'urn:ngsi-ld:EquipmentIoTMeasurement:1'}],
+                                                placeholder='Select equipment iot...'),
                                             dcc.Graph(
                                                 id='buffer',
                                                 figure=self._buffer_fig()
-                                            ),
+                                            )],
                                             md=6
                                         ),
                                         dcc.Interval(
@@ -115,15 +126,17 @@ class SmartCollaborationDashboard:
 
         self._app.callback(
             Output('fatigue', 'figure'),
-            Input('graphs-interval', 'n_intervals'),
+            Input('config-interval', 'n_intervals'),
+            Input('config-worker-id', 'value'),
         )(self._update_fatigue)
 
         self._app.callback(
             Output('buffer', 'figure'),
-            Input('graphs-interval', 'n_intervals'),
+            Input('config-interval', 'n_intervals'),
+            Input('config-iot-id', 'value'),
         )(self._update_buffer)
 
-    def _update_config(self, n):
+    def _update_config(self, n_intervals):
         task_execution = TaskExecutionEntity(id='')
         interventions = self._orion.fetch_entity_ids(task_execution.type)  # todo read ID from dashboard
         task_execution.id = interventions[-1]
@@ -142,9 +155,12 @@ class SmartCollaborationDashboard:
             html.Img(src=self._config_fig(img)),
         ]
 
-    def _update_fatigue(self, _):
+    def _update_fatigue(self, n_intervals, worker_entity_id):
+        if not worker_entity_id:
+            return self._fatigue_fig()
+
         fatigue = self._quantumleap.fetch_entity_series(
-            entity_id="urn:ngsi-ld:Worker:1",  # todo read from dashboard
+            entity_id=worker_entity_id,
             entity_type="Worker",
             entries_from_latest=10,
             # from_timepoint=datetime.now() - timedelta(seconds=60) - timedelta(hours=1),
@@ -154,9 +170,12 @@ class SmartCollaborationDashboard:
         fatigue = fatigue.workerStates.apply(lambda x: x["fatigue"]["level"]["value"] if x else x).rename("fatigue")
         return self._fatigue_fig(fatigue)
 
-    def _update_buffer(self, _):
+    def _update_buffer(self, n_intervals, iot_entity_id):
+        if not iot_entity_id:
+            return self._buffer_fig()
+
         buffer = self._quantumleap.fetch_entity_series(
-            entity_id="urn:ngsi-ld:EquipmentIoTMeasurement:1",  # todo read from dashboard
+            entity_id=iot_entity_id,
             entity_type="EquipmentIoTMeasurement",
             entries_from_latest=10,
             # from_timepoint=datetime.now() - timedelta(seconds=60) - timedelta(hours=1),
