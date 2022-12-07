@@ -36,11 +36,11 @@ class SmartCollaborationDashboard:
                               (150, 368, 182, 400),
                               (345, 410, 377, 442)]
         self._orion_client = OrionClient(
-            URI("http://quantumleap:8668"),
+            URI("http://quantumleap:8668"),  # todo read from env
             FiwareContext(service=None, service_path=None, correlator=None))
 
         self._quantumleap = QuantumLeapClient(
-            base_url=URI("http://orion:1026"),
+            base_url=URI("http://orion:1026"),  # todo read from env
             ctx=FiwareContext(
                 # service=base_path.tenant(),
                 service_path="/"
@@ -55,7 +55,7 @@ class SmartCollaborationDashboard:
     def _build_layout(self):
         self._app.layout = dbc.Container(
             [
-                html.H1("Self-assignment dashboard"),
+                html.H1("Smart Collaboration Dashboard"),
 
                 dbc.Row(
                     [
@@ -77,7 +77,7 @@ class SmartCollaborationDashboard:
                                 dbc.Row(
                                     [
                                         html.Center([
-                                            html.Img(src=f'data:image/png;base64,{base64.b64encode(cv2.imencode(".jpg", cv2.imread(self._input_path))[1]).decode("ascii")}'),
+                                            html.Img(src=self._config_fig()),
                                         ], id='config'),
                                         dcc.Interval(
                                             id='config-interval',
@@ -94,11 +94,13 @@ class SmartCollaborationDashboard:
                                         dbc.Col(
                                             dcc.Graph(
                                                 id='fatigue',
+                                                figure=self._fatigue_fig()
                                             ),
                                             md=6),
                                         dbc.Col(
                                             dcc.Graph(
                                                 id='buffer',
+                                                figure=self._buffer_fig()
                                             ),
                                             md=6
                                         ),
@@ -113,7 +115,7 @@ class SmartCollaborationDashboard:
                             ],
                             md=12
                         ),
-                    ]
+                    ],
                 ),
             ],
             fluid=False
@@ -160,10 +162,8 @@ class SmartCollaborationDashboard:
                 cv2.rectangle(img, (position[0], position[1]),
                               (position[2], position[3]), (0, 0, 255), 5)
 
-        img_base64 = base64.b64encode(cv2.imencode('.jpg', img)[1]).decode('ascii')
-
         return [
-            html.Img(src=f'data:image/png;base64,{img_base64}'),
+            html.Img(src=self._config_fig(img)),
         ]
 
     def _update_fatigue(self, _):
@@ -175,9 +175,8 @@ class SmartCollaborationDashboard:
             # to_timepoint=datetime.now() - timedelta(hours=1)
         )
 
-        fatigue = fatigue.workerStates.apply(lambda x: x["fatigue"]["level"]["value"] if x else x).rename("Fatigue")
-
-        return px.line(fatigue, x=fatigue.index, y="Fatigue", markers=True, color_discrete_sequence=['coral'])
+        fatigue = fatigue.workerStates.apply(lambda x: x["fatigue"]["level"]["value"] if x else x).rename("fatigue")
+        return self._fatigue_fig(fatigue)
 
     def _update_buffer(self, _):
         buffer = self._fetch_entity_series(
@@ -188,6 +187,30 @@ class SmartCollaborationDashboard:
             # to_timepoint=datetime.now() - timedelta(hours=1)
         )
 
-        buffer = buffer.fields.apply(lambda x: x["bufferLevel"]["t2"] if x else x).rename("Buffer")
+        buffer = buffer.fields.apply(lambda x: x["bufferLevel"]["t2"] if x else x).rename("buffer")
 
-        return px.line(buffer, x=buffer.index, y="Buffer", markers=True, color_discrete_sequence=['silver'])
+        return self._buffer_fig(buffer)
+
+    def _config_fig(self, img=None):
+        if not img:
+            img = cv2.imread(self._input_path)
+
+        return f"data:image/png;base64,{base64.b64encode(cv2.imencode('.jpg', img)[1]).decode('ascii')}"
+
+    def _fatigue_fig(self, df=None):
+        if not df:
+            empty_fatigue = {
+                'timestamp': [],
+                'fatigue': [],
+            }
+            df = pd.DataFrame(empty_fatigue).set_index('timestamp')
+        return px.line(df, x=df.index, y="fatigue", markers=True, color_discrete_sequence=['coral'])
+
+    def _buffer_fig(self, df=None):
+        if not df:
+            empty_buffer = {
+                'timestamp': [],
+                'buffer': [],
+            }
+            df = pd.DataFrame(empty_buffer).set_index('timestamp')
+        return px.line(df, x=df.index, y='buffer', markers=True, color_discrete_sequence=['silver'])
