@@ -151,7 +151,7 @@ class FatigueDashboard(ABC):
         children_cell_3 = []
 
         for worker in self.worker_data:
-            cell_id = ord(worker[-1]) % 3
+            cell_id = ord(worker[-1]) % 3  # get the ASCII code of worker id's last character as cell identifier
             if cell_id == 0:
                 children_cell_1.append(
                     dcc.Graph(id=worker, figure=self._update_worker_fatigue(worker))
@@ -217,73 +217,11 @@ class FatigueDashboard(ABC):
         return px.line(fatigue, title=worker_id, x=fatigue.index, y="Fatigue", markers=True,
                        color_discrete_sequence=['coral'])
 
-    # def _update_worker_2_fatigue(self, n, worker_id="worker2"):
-    #     self._fetch_workers_data()
-    #     fatigue = self.worker_data[worker_id].workerStates.apply(
-    #         lambda x: x["fatigue"]["level"]["value"] if x else x).rename("Fatigue")
-    #
-    #     return px.line(fatigue, title=worker_id, x=fatigue.index, y="Fatigue", markers=True,
-    #                    color_discrete_sequence=['coral'])
-    #
-    # def _update_worker_3_fatigue(self, n, worker_id="worker3"):
-    #     self._fetch_workers_data()
-    #     fatigue = self.worker_data[worker_id].workerStates.apply(
-    #         lambda x: x["fatigue"]["level"]["value"] if x else x).rename("Fatigue")
-    #
-    #     return px.line(fatigue, title=worker_id, x=fatigue.index, y="Fatigue", markers=True,
-    #                    color_discrete_sequence=['coral'])
-    #
-    # def _update_worker_4_fatigue(self, n, worker_id="worker4"):
-    #     self._fetch_workers_data()
-    #     fatigue = self.worker_data[worker_id].workerStates.apply(
-    #         lambda x: x["fatigue"]["level"]["value"] if x else x).rename("Fatigue")
-    #
-    #     return px.line(fatigue, title=worker_id, x=fatigue.index, y="Fatigue", markers=True,
-    #                    color_discrete_sequence=['coral'])
-    #
-    # def _update_worker_5_fatigue(self, n, worker_id="worker5"):
-    #     self._fetch_workers_data()
-    #     fatigue = self.worker_data[worker_id].workerStates.apply(
-    #         lambda x: x["fatigue"]["level"]["value"] if x else x).rename("Fatigue")
-    #
-    #     return px.line(fatigue, title=worker_id, x=fatigue.index, y="Fatigue", markers=True,
-    #                    color_discrete_sequence=['coral'])
-
     def _build_callbacks(self):
         self.app.callback(
             Output("worker_graphs", 'children'),
             Input('worker-interval', 'n_intervals')
         )(self._build_worker_graphs)
-
-        # self.app.callback(
-        #     Output("worker1", 'figure'),
-        #     Input('graphs-interval', 'n_intervals'),
-        #     # Input("worker4", 'value')
-        # )(self._update_worker_1_fatigue)
-
-        # self.app.callback(
-        #     Output("worker2", 'figure'),
-        #     Input('graphs-interval', 'n_intervals'),
-        #     # Input("worker4", 'value')
-        # )(self._update_worker_2_fatigue)
-        #
-        # self.app.callback(
-        #     Output("worker3", 'figure'),
-        #     Input('graphs-interval', 'n_intervals'),
-        #     # Input("worker4", 'value')
-        # )(self._update_worker_3_fatigue)
-        #
-        # self.app.callback(
-        #     Output("worker4", 'figure'),
-        #     Input('graphs-interval', 'n_intervals'),
-        #     # Input("worker4", 'value')
-        # )(self._update_worker_4_fatigue)
-        #
-        # self.app.callback(
-        #     Output("worker5", 'figure'),
-        #     Input('graphs-interval', 'n_intervals'),
-        #     # Input("worker4", 'value')
-        # )(self._update_worker_5_fatigue)
 
 
 fatigue_dashboard = FatigueDashboard()
