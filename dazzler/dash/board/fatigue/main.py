@@ -174,6 +174,19 @@ class FatigueDashboard(ABC):
                     html.Br()
                 )
 
+        if len(children_cell_1) == 0:
+            children_cell_1.append(
+                dcc.Markdown(''' No worker inside the cell. '''),
+            )
+        if len(children_cell_2) == 0:
+            children_cell_2.append(
+                dcc.Markdown(''' No worker inside the cell. '''),
+            )
+        if len(children_cell_3) == 0:
+            children_cell_3.append(
+                dcc.Markdown(''' No worker inside the cell. '''),
+            )
+
         children.append(
             dbc.Row(
                 [
