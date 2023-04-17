@@ -44,3 +44,11 @@ INSIGHT_TYPE = 'Insights'
 class InsightEntity(BaseEntity):
     type = INSIGHT_TYPE
     Results: Optional[StructuredValueAttr]
+
+
+WORKER_TYPE = 'Worker'
+
+
+class WorkerEntity(BaseEntity):
+    type = WORKER_TYPE
+    workerStates: Optional[StructuredValueAttr]
