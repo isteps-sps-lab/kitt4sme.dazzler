@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import dash_bootstrap_components as dbc
 import plotly.express as px
+import pytz
 from dash import Dash, html, dcc, Output, Input
 from dash.development.base_component import Component
 from dash.html import Figure
@@ -69,12 +70,14 @@ class FatigueDashboard(ABC):
             self.worker_data = self._quantumleap.fetch_entity_type_series(entity_type="Worker",
                                                                           from_timepoint=from_,
                                                                           to_timepoint=to_)
+            for key in self.worker_data:
+                tz = pytz.timezone('CET')  # TODO: read timezone from environment vars
+                self.worker_data[key]['index'] = self.worker_data[key]['index'].apply(lambda x: x.astimezone(tz))
+                self.worker_data[key] = self.worker_data[key].set_index('index')
+
         except HTTPError:
             print(f"No data available for the given time window {from_} -- {to_}")
             self.worker_data = {}
-
-        # TODO: fix timezone
-        # TODO: read timezone from environment vars
 
     def _build_worker_graphs(self, n=0) -> Component:
         self._fetch_workers_data()
