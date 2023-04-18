@@ -1,8 +1,8 @@
 from typing import Optional
 
 from fipy.ngsi.entity import BaseEntity, BoolAttr, FloatAttr, \
-    StructuredValueAttr
-
+    StructuredValueAttr, Attr
+from pydantic import BaseModel
 
 ROUGHNESS_ESTIMATE_TYPE = 'RoughnessEstimate'
 
@@ -47,6 +47,26 @@ class InsightEntity(BaseEntity):
 
 
 WORKER_TYPE = 'Worker'
+
+
+class Datetime(BaseModel):
+    dateTime: str
+    format: str
+    timezoneId: str
+
+
+class Fatigue(BaseModel):
+    level: FloatAttr
+    timestamp: Datetime
+
+
+class WorkerStates(BaseModel):
+    fatigue: Optional[Fatigue]
+
+
+class WorkerStatesAttr(Attr):
+    type = "WorkerStatesProperties"
+    value: WorkerStates
 
 
 class WorkerEntity(BaseEntity):

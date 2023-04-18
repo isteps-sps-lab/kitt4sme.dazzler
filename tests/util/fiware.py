@@ -1,3 +1,4 @@
+import datetime
 import random
 
 from uri import URI
@@ -13,7 +14,7 @@ from fipy.sim.generator import BoolAttr, float_attr_close_to, \
 from dazzler.dash.board.insight.datasource import \
     example_ngsi_structured_value_1, example_ngsi_structured_value_2
 from dazzler.ngsy import InsightEntity, InspectionDemoEntity, \
-    RoughnessEstimateEntity, WorkerEntity
+    RoughnessEstimateEntity, WorkerEntity, WorkerStatesAttr, Datetime, Fatigue, WorkerStates
 
 TENANT = 'demo'
 QUANTUMLEAP_INTERNAL_BASE_URL = 'http://quantumleap:8668'
@@ -105,7 +106,18 @@ insight_demo_batches_stream = mk_insight_demo_batches_stream()
 def mk_fams_worker_demo() -> WorkerEntity:
     return WorkerEntity(
         id='',
-        workerStates=StructuredValueAttr.new({"fatigue": {"level": FloatAttr.new(random.randint(0, 10))}}),
+        workerStates=WorkerStatesAttr.new(
+            WorkerStates(
+                fatigue=Fatigue(
+                    level=FloatAttr.new(random.randint(0, 10)),
+                    timestamp=Datetime(
+                        dateTime=datetime.datetime.now().isoformat(),
+                        format="ISO",
+                        timezoneId="UTC"
+                    )
+                )
+            )
+        ),
     )
 
 
