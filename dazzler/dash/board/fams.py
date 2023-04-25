@@ -67,10 +67,9 @@ class FatigueDashboard(ABC):
         to_ = datetime.now(timezone.utc)
         from_ = to_ - timedelta(minutes=3)
         try:
-            r = self._quantumleap.fetch_entity_type_series(entity_type="Worker",
-                                                           from_timepoint=from_,
-                                                           to_timepoint=to_)
-            self.worker_data = {k: r[k] for k in r if r[k]['workerStates'].any()}
+            self.worker_data = self._quantumleap.fetch_entity_type_series(entity_type="Worker",
+                                                                          from_timepoint=from_,
+                                                                          to_timepoint=to_)
             for key in self.worker_data:
                 tz = pytz.timezone('CET')  # TODO: read timezone from environment vars
                 self.worker_data[key]['index'] = self.worker_data[key]['index'].apply(lambda x: x.astimezone(tz))
