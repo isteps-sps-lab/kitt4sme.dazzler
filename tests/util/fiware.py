@@ -1,7 +1,10 @@
+import datetime
+import random
+
 from uri import URI
 from typing import Generator, List
 
-from fipy.ngsi.entity import StructuredValueAttr
+from fipy.ngsi.entity import StructuredValueAttr, FloatAttr
 from fipy.ngsi.headers import FiwareContext
 from fipy.ngsi.orion import OrionClient
 from fipy.ngsi.quantumleap import QuantumLeapClient
@@ -11,8 +14,7 @@ from fipy.sim.generator import BoolAttr, float_attr_close_to, \
 from dazzler.dash.board.insight.datasource import \
     example_ngsi_structured_value_1, example_ngsi_structured_value_2
 from dazzler.ngsy import InsightEntity, InspectionDemoEntity, \
-    RoughnessEstimateEntity
-
+    RoughnessEstimateEntity, WorkerEntity, WorkerStatesAttr, Datetime, Fatigue, WorkerStates
 
 TENANT = 'demo'
 QUANTUMLEAP_INTERNAL_BASE_URL = 'http://quantumleap:8668'
@@ -99,3 +101,31 @@ def mk_insight_demo_batches_stream() \
 
 
 insight_demo_batches_stream = mk_insight_demo_batches_stream()
+
+
+def mk_fams_worker_demo() -> WorkerEntity:
+    return WorkerEntity(
+        id='',
+        workerStates=WorkerStatesAttr.new(
+            WorkerStates(
+                fatigue=Fatigue(
+                    level=FloatAttr.new(random.randint(0, 10)),
+                    timestamp=Datetime(
+                        dateTime=datetime.datetime.now().isoformat(),
+                        format="ISO",
+                        timezoneId="UTC"
+                    )
+                )
+            )
+        ),
+    )
+
+
+def mk_fams_demo_worker_batches_stream() -> Generator[List[WorkerEntity], None, None]:
+    factory = EntityFactory.with_numeric_suffixes(
+        how_many=6, generator=mk_fams_worker_demo
+    )
+    return entity_batch(factory)
+
+
+fams_demo_worker_batches_stream = mk_fams_demo_worker_batches_stream()
