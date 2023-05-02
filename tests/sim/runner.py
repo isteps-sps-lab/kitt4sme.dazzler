@@ -8,6 +8,7 @@ from tests.util.fiware import quantumleap_client, \
     inspection_demo_batches_stream, roughness_estimate_batches_stream, \
     orion_client, insight_demo_batches_stream, fams_demo_worker_batches_stream
 
+
 docker = DockerCompose(__file__)
 
 

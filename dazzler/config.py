@@ -23,7 +23,7 @@ class BoardAssembly(BaseModel):
 
 def demo_boards() -> List[BoardAssembly]:
     bootstrap_demo_board = BoardAssembly(
-        builder='dazzler.dash.board.fams.dash_builder')
+        builder='dazzler.dash.board.dbc_demo.dash_builder')
     return [bootstrap_demo_board]
 
 
@@ -33,8 +33,8 @@ CONFIG_FILE_ENV_VAR_NAME = 'DAZZLER_CONFIG'
 
 
 class Settings(BaseSettings):
-    orion_base_url: AnyHttpUrl = 'http://sps-lab01.supsi.ch:8006'
-    quantumleap_base_url: AnyHttpUrl = 'http://sps-lab01.supsi.ch:8008'
+    orion_base_url: AnyHttpUrl = 'http://orion:1026'
+    quantumleap_base_url: AnyHttpUrl = 'http://quantumleap:8668'
     boards: Dict[TenantName, List[BoardAssembly]] = {}
 
     @staticmethod

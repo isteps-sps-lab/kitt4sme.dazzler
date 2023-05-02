@@ -1,8 +1,7 @@
 import datetime
 import random
-
-from uri import URI
 from typing import Generator, List
+from uri import URI
 
 from fipy.ngsi.entity import StructuredValueAttr, FloatAttr
 from fipy.ngsi.headers import FiwareContext
@@ -15,6 +14,7 @@ from dazzler.dash.board.insight.datasource import \
     example_ngsi_structured_value_1, example_ngsi_structured_value_2
 from dazzler.ngsy import InsightEntity, InspectionDemoEntity, \
     RoughnessEstimateEntity, WorkerEntity, WorkerStatesAttr, Datetime, Fatigue, WorkerStates
+
 
 TENANT = 'demo'
 QUANTUMLEAP_INTERNAL_BASE_URL = 'http://quantumleap:8668'
