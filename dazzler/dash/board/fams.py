@@ -7,7 +7,7 @@ import plotly.express as px
 import pytz
 from dash import Dash, html, dcc, Output, Input
 from dash.development.base_component import Component
-from requests import HTTPError
+from requests import HTTPError, ConnectionError
 
 from dazzler.dash.fiware import QuantumLeapSource, OrionSource
 from dazzler.dash.wiring import BasePath
@@ -41,7 +41,7 @@ class FatigueDashboard(ABC):
                     [
                         dbc.Col(
                             dcc.Markdown(
-                                '''This graph shows the current levels of **fatigue** for each worker assigned to the 
+                                '''This graph shows the current levels of **fatigue** for each worker assigned to the
                                 related production cell.'''
                             ),
                             md=12),
@@ -95,9 +95,23 @@ class FatigueDashboard(ABC):
             self.fatigue_df = pd.concat([fatigue_cell_1, fatigue_cell_2, fatigue_cell_3], axis=1)
             self.fatigue_df.columns = ["Cell1", "Cell2", "Cell3"]
 
-        except HTTPError:
+        except (HTTPError, ConnectionError) as e:
             print(f"No data available for the given time window {from_} -- {to_}")
-            self.worker_data = {}
+            print(e)
+            self.set_empty_dataset()
+
+    def set_empty_dataset(self):
+        self.worker_data = {}
+
+        now = datetime.now().isoformat()
+        ctz = pytz.timezone('CET')  # TODO: read timezone from environment vars
+        tix = pd.Timestamp(now, tz=ctz)
+        df = pd.DataFrame({
+            'index': [tix],
+            'Cell1': [0], 'Cell2': [0], 'Cell3': [0]
+        })
+        self.fatigue_df = df.set_index('index')
+
 
     def _build_worker_graphs(self, n=0) -> Component:
         self._fetch_workers_data()
