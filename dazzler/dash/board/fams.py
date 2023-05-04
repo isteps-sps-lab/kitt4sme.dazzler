@@ -92,8 +92,11 @@ class FatigueDashboard(ABC):
                 else:
                     fatigue_cell_3 = pd.concat([fatigue_cell_3, fatigue]).groupby(level=0).mean()
 
-            self.fatigue_df = pd.concat([fatigue_cell_1, fatigue_cell_2, fatigue_cell_3], axis=1)
-            self.fatigue_df.columns = ["Cell1", "Cell2", "Cell3"]
+            self.fatigue_df = pd.concat([
+                fatigue_cell_1.rename(columns={0: 'Cell1'}),
+                fatigue_cell_2.rename(columns={0: 'Cell2'}),
+                fatigue_cell_3.rename(columns={0: 'Cell3'})
+            ], axis=1)
 
         except (HTTPError, ConnectionError) as e:
             print(f"No data available for the given time window {from_} -- {to_}")
@@ -111,7 +114,6 @@ class FatigueDashboard(ABC):
             'Cell1': [0], 'Cell2': [0], 'Cell3': [0]
         })
         self.fatigue_df = df.set_index('index')
-
 
     def _build_worker_graphs(self, n=0) -> Component:
         self._fetch_workers_data()
@@ -156,8 +158,8 @@ class FatigueDashboard(ABC):
         return px.bar(
             # title='Control',
             x=self.fatigue_df.columns,
-            y=[self.fatigue_df['Cell1'].mean(), self.fatigue_df['Cell2'].mean(), self.fatigue_df['Cell3'].mean()],
-            error_y=[self.fatigue_df['Cell1'].std(), self.fatigue_df['Cell2'].std(), self.fatigue_df['Cell3'].std()],
+            y=[self.fatigue_df[cell].mean() for cell in self.fatigue_df.columns],
+            error_y=[self.fatigue_df[cell].std() for cell in self.fatigue_df.columns],
             labels={'x': 'Cell', 'y': 'Fatigue [avg]', 'color': 'Legend'},
             color=self.fatigue_df.columns,
             color_discrete_sequence=['rgb(248,156,116)', 'rgb(139,224,164)', 'rgb(158,185,243)']
