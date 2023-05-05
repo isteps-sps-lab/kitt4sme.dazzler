@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dazzler"
-version = "0.4.0"
+version = "0.6.0"
 description = "Dazzling Dash-boards for KITT4SME services."
 authors = ["c0c0n3"]
 
