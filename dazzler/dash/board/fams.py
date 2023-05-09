@@ -72,7 +72,7 @@ class FatigueDashboard(ABC):
 
     def _fetch_workers_data(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
-        dti = self._date_time_index_utc()  # .tz_convert("UTC")
+        dti = self._date_time_index_utc()
 
         try:
             r = self._quantumleap.fetch_entity_type_series(entity_type="Worker",
@@ -114,6 +114,7 @@ class FatigueDashboard(ABC):
 
     def _build_worker_graphs(self, n=0) -> Component:
         workers_by_cell_df, worker_data = self._fetch_workers_data()
+        worker_data.index = worker_data.index.tz_convert('CET')  # read timezone from env
 
         return dbc.Row(
             [
