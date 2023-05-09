@@ -92,7 +92,7 @@ class FatigueDashboard(ABC):
         except (HTTPError, ConnectionError) as e:
             print(f"No data available for the given time window {dti[0]} -- {dti[-1]}")
             print(e)
-            return self._empty_dataset()
+            return pd.DataFrame(columns=['workers', 'cell']), self._empty_dataset()
 
         workers_cells_df = pd.DataFrame(
             {'workers': worker_data.keys(),
