@@ -256,7 +256,9 @@ class FatigueDashboard(ABC):
     def _build_interventions(self, n=0) -> Component:
         intervention = self._fetch_intervention()
         if not intervention:
-            p = [html.Small(datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), className="text-muted"),
+            p = [html.Small(
+                datetime.datetime.now(pytz.utc).astimezone(pytz.timezone('CET')).strftime("%d-%m-%Y %H:%M:%S"),
+                className="text-muted"),
                  ' No interventions']
         else:
             intervention['datetime'] = intervention['datetime'].astimezone(pytz.timezone('CET'))
