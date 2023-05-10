@@ -213,30 +213,43 @@ class FatigueDashboard(ABC):
             range_y=[0, 10])
 
     def _fetch_intervention(self) -> Dict:
+        from_ = pd.Timestamp.now('utc') - pd.Timedelta(hours=1)
+
         try:
-            from_ = pd.Timestamp.now('utc') - pd.Timedelta(hours=1)
             assignment = list(self._quantumleap.fetch_entity_type_series(entity_type="TaskAssignment",
                                                                          from_timepoint=from_).values())[0].to_dict(
                 orient='records')[-1]
-            execution = list(self._quantumleap.fetch_entity_type_series(entity_type="TaskExecution",
-                                                                        from_timepoint=from_).values())[0].to_dict(
-                orient='records')[-1]
-            if int(assignment['creationTimestamp']) > int(execution['creationTimestamp']):
-                return {
+            assignment_intervention = {
                     'datetime': datetime.datetime.fromtimestamp(int(assignment['creationTimestamp']) / 1000),
                     'intervention': "Reconfigure",
                     "from": int(assignment['oldTask'][-1]),
                     "to": int(assignment['newTask'][-1]),
                     "workers": assignment['additionalParameters']['numberOfWorkers']
                 }
+        except Exception as e:
+            assignment_intervention = {}
 
-            else:
-                return {
+        try:
+            execution = list(self._quantumleap.fetch_entity_type_series(entity_type="TaskExecution",
+                                                                        from_timepoint=from_).values())[0].to_dict(
+                orient='records')[-1]
+            execution_intervention = {
                     'datetime': datetime.datetime.fromtimestamp(int(execution['creationTimestamp']) / 1000),
                     'intervention': "Continue"
                 }
-
         except Exception as e:
+            execution_intervention = {}
+
+        if assignment_intervention and execution_intervention:
+            if assignment_intervention['datetime'] > execution_intervention['datetime']:
+                return assignment_intervention
+            else:
+                return execution_intervention
+        elif assignment_intervention:
+            return assignment_intervention
+        elif execution_intervention:
+            return execution_intervention
+        else:
             return {}
 
     def _build_interventions(self, n=0) -> Component:
