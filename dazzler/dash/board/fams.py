@@ -256,7 +256,7 @@ class FatigueDashboard(ABC):
                     html.Strong(f'Line{intervention["to"]}'),
                 ]
             else:
-                p += ['Keep the current configuration']
+                p += [' Keep the current configuration']
 
         return dbc.Row([
             dbc.Col(
