@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import pytz
 from dash import Dash, html, dcc, Output, Input
 from dash.development.base_component import Component
 from requests import HTTPError, ConnectionError
@@ -220,12 +221,12 @@ class FatigueDashboard(ABC):
                                                                          from_timepoint=from_).values())[0].to_dict(
                 orient='records')[-1]
             assignment_intervention = {
-                    'datetime': datetime.datetime.fromtimestamp(int(assignment['creationTimestamp']) / 1000),
-                    'intervention': "Reconfigure",
-                    "from": int(assignment['oldTask'][-1]),
-                    "to": int(assignment['newTask'][-1]),
-                    "workers": assignment['additionalParameters']['numberOfWorkers']
-                }
+                'datetime': datetime.datetime.fromtimestamp(int(assignment['creationTimestamp']) / 1000, tz=pytz.utc),
+                'intervention': "Reconfigure",
+                "from": int(assignment['oldTask'][-1]),
+                "to": int(assignment['newTask'][-1]),
+                "workers": assignment['additionalParameters']['numberOfWorkers']
+            }
         except Exception as e:
             assignment_intervention = {}
 
@@ -234,9 +235,9 @@ class FatigueDashboard(ABC):
                                                                         from_timepoint=from_).values())[0].to_dict(
                 orient='records')[-1]
             execution_intervention = {
-                    'datetime': datetime.datetime.fromtimestamp(int(execution['creationTimestamp']) / 1000),
-                    'intervention': "Continue"
-                }
+                'datetime': datetime.datetime.fromtimestamp(int(execution['creationTimestamp']) / 1000, tz=pytz.utc),
+                'intervention': "Continue"
+            }
         except Exception as e:
             execution_intervention = {}
 
@@ -258,6 +259,7 @@ class FatigueDashboard(ABC):
             p = [html.Small(datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), className="text-muted"),
                  ' No interventions']
         else:
+            intervention['datetime'] = intervention['datetime'].astimezone(pytz.timezone('CET'))
             p = [html.Small(intervention['datetime'].strftime("%d-%m-%Y %H:%M:%S"), className="text-muted")]
             if intervention['intervention'] == 'Reconfigure':
                 p += [
