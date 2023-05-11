@@ -218,7 +218,8 @@ class FatigueDashboard(ABC):
 
         try:
             assignment = list(self._quantumleap.fetch_entity_type_series(entity_type="TaskAssignment",
-                                                                         from_timepoint=from_).values())[0].to_dict(
+                                                                         from_timepoint=from_,
+                                                                         entries_from_latest=1).values())[0].to_dict(
                 orient='records')[-1]
             assignment_intervention = {
                 'datetime': datetime.datetime.fromtimestamp(int(assignment['creationTimestamp']) / 1000, tz=pytz.utc),
@@ -232,7 +233,8 @@ class FatigueDashboard(ABC):
 
         try:
             execution = list(self._quantumleap.fetch_entity_type_series(entity_type="TaskExecution",
-                                                                        from_timepoint=from_).values())[0].to_dict(
+                                                                        from_timepoint=from_,
+                                                                        entries_from_latest=1).values())[0].to_dict(
                 orient='records')[-1]
             execution_intervention = {
                 'datetime': datetime.datetime.fromtimestamp(int(execution['creationTimestamp']) / 1000, tz=pytz.utc),
@@ -259,7 +261,7 @@ class FatigueDashboard(ABC):
             p = [html.Small(
                 datetime.datetime.now(pytz.utc).astimezone(pytz.timezone('CET')).strftime("%d-%m-%Y %H:%M:%S"),
                 className="text-muted"),
-                 ' No interventions']
+                ' No interventions']
         else:
             intervention['datetime'] = intervention['datetime'].astimezone(pytz.timezone('CET'))
             p = [html.Small(intervention['datetime'].strftime("%d-%m-%Y %H:%M:%S"), className="text-muted")]
