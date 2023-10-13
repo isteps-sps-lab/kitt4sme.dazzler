@@ -7,9 +7,9 @@ import pandas as pd
 import plotly.express as px
 from dash import Dash, html, dcc, Output, Input
 
-from dazzler.dash.board.smartcollaboration.entities import TaskExecutionEntity
 from dazzler.dash.fiware import QuantumLeapSource, OrionSource
 from dazzler.dash.wiring import BasePath
+from dazzler.ngsy import TaskExecutionEntity
 
 
 def dash_builder(app: Dash) -> Dash:
@@ -21,7 +21,7 @@ class SmartCollaborationDashboard:
     def __init__(self, app: Dash):
         print()
         self._app = app
-        self._input_path = f"{os.path.dirname(os.path.realpath(__file__))}/assets/camera.png"
+        self._input_path = f"{os.path.dirname(os.path.realpath(__file__))}/assets/frame.png"
         self._screw_coords = [(15, 127, 47, 159),
                               (126, 54, 158, 86),
                               (323, 20, 355, 52),
@@ -78,9 +78,10 @@ class SmartCollaborationDashboard:
                                         dbc.Col([
                                             dbc.Select(
                                                 id='config-worker-id',
-                                                # todo read options from orion
-                                                options=[{'label': 'urn:ngsi-ld:Worker:1',
-                                                          'value': 'urn:ngsi-ld:Worker:1'}],
+                                                options=[{'label': id_,
+                                                          'value': id_}
+                                                         for id_ in
+                                                         self._orion.fetch_entity_ids('Worker')],
                                                 placeholder='Select worker...'),
                                             dcc.Graph(
                                                 id='fatigue',
@@ -90,9 +91,10 @@ class SmartCollaborationDashboard:
                                         dbc.Col([
                                             dbc.Select(
                                                 id='config-iot-id',
-                                                # todo read options from orion
-                                                options=[{'label': 'urn:ngsi-ld:EquipmentIoTMeasurement:1',
-                                                          'value': 'urn:ngsi-ld:EquipmentIoTMeasurement:1'}],
+                                                options=[{'label': id_,
+                                                          'value': id_}
+                                                         for id_ in
+                                                         self._orion.fetch_entity_ids('EquipmentIoTMeasurement')],
                                                 placeholder='Select equipment iot...'),
                                             dcc.Graph(
                                                 id='buffer',
@@ -182,7 +184,7 @@ class SmartCollaborationDashboard:
             # to_timepoint=datetime.now() - timedelta(hours=1)
         )
 
-        buffer = buffer.fields.apply(lambda x: x["bufferLevel"]["t2"] if x else x).rename("buffer")
+        buffer = buffer.fields.apply(lambda x: x["bufferLevel"]["value1"] if x else x).rename("buffer")
 
         return self._buffer_fig(buffer)
 

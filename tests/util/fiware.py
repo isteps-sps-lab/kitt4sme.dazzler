@@ -1,9 +1,11 @@
 import datetime
 import random
 from typing import Generator, List
+
+import numpy as np
 from uri import URI
 
-from fipy.ngsi.entity import StructuredValueAttr, FloatAttr
+from fipy.ngsi.entity import StructuredValueAttr, FloatAttr, TextAttr
 from fipy.ngsi.headers import FiwareContext
 from fipy.ngsi.orion import OrionClient
 from fipy.ngsi.quantumleap import QuantumLeapClient
@@ -13,8 +15,8 @@ from fipy.sim.generator import BoolAttr, float_attr_close_to, \
 from dazzler.dash.board.insight.datasource import \
     example_ngsi_structured_value_1, example_ngsi_structured_value_2
 from dazzler.ngsy import InsightEntity, InspectionDemoEntity, \
-    RoughnessEstimateEntity, WorkerEntity, WorkerStatesAttr, Datetime, Fatigue, WorkerStates
-
+    RoughnessEstimateEntity, WorkerEntity, WorkerStatesAttr, Datetime, Fatigue, WorkerStates, \
+    EquipmentIoTMeasurementEntity, TaskExecutionEntity
 
 TENANT = 'demo'
 QUANTUMLEAP_INTERNAL_BASE_URL = 'http://quantumleap:8668'
@@ -129,3 +131,54 @@ def mk_fams_demo_worker_batches_stream() -> Generator[List[WorkerEntity], None, 
 
 
 fams_demo_worker_batches_stream = mk_fams_demo_worker_batches_stream()
+
+
+def mk_smart_collaboration_task_demo() -> TaskExecutionEntity:
+    return TaskExecutionEntity(
+        id='',
+        creationTimestamp=TextAttr.new(datetime.datetime.now().isoformat()),
+        additionalParameters=StructuredValueAttr.new({"sequence": np.random.randint(2, size=9).tolist()}),
+        taskName=TextAttr.new("ScrewAssignment"),
+        duration=FloatAttr.new(0),
+        iteration=FloatAttr.new(1),
+    )
+
+
+def mk_smart_collaboration_worker_demo() -> WorkerEntity:
+    return WorkerEntity(
+        id='',
+        workerStates=StructuredValueAttr.new({"fatigue": {"level": FloatAttr.new(random.randint(0, 10))}}),
+    )
+
+
+def mk_smart_collaboration_iot_demo() -> EquipmentIoTMeasurementEntity:
+    return EquipmentIoTMeasurementEntity(
+        id='',
+        fields=StructuredValueAttr.new({"bufferLevel": {"t1": "NUMBER", "t2": random.randint(0, 4)}}),
+    )
+
+
+def mk_smart_collaboration_demo_task_batches_stream() -> Generator[List[TaskExecutionEntity], None, None]:
+    factory = EntityFactory.with_numeric_suffixes(
+        how_many=2, generator=mk_smart_collaboration_task_demo
+    )
+    return entity_batch(factory)
+
+
+def mk_smart_collaboration_demo_worker_batches_stream() -> Generator[List[WorkerEntity], None, None]:
+    factory = EntityFactory.with_numeric_suffixes(
+        how_many=2, generator=mk_smart_collaboration_worker_demo
+    )
+    return entity_batch(factory)
+
+
+def mk_smart_collaboration_demo_iot_batches_stream() -> Generator[List[EquipmentIoTMeasurementEntity], None, None]:
+    factory = EntityFactory.with_numeric_suffixes(
+        how_many=2, generator=mk_smart_collaboration_iot_demo
+    )
+    return entity_batch(factory)
+
+
+smart_collaboration_demo_task_batches_stream = mk_smart_collaboration_demo_task_batches_stream()
+smart_collaboration_demo_worker_batches_stream = mk_smart_collaboration_demo_worker_batches_stream()
+smart_collaboration_demo_iot_batches_stream = mk_smart_collaboration_demo_iot_batches_stream()

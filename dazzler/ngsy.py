@@ -1,11 +1,11 @@
 from typing import Optional
 
 from fipy.ngsi.entity import BaseEntity, BoolAttr, FloatAttr, \
-    StructuredValueAttr, Attr
+    StructuredValueAttr, Attr, TextAttr
 from pydantic import BaseModel
 
-
 ROUGHNESS_ESTIMATE_TYPE = 'RoughnessEstimate'
+
 
 class RoughnessEstimateEntity(BaseEntity):
     type = ROUGHNESS_ESTIMATE_TYPE
@@ -14,6 +14,7 @@ class RoughnessEstimateEntity(BaseEntity):
 
 
 INSPECTION_DEMO_TYPE = 'inspection_demo'
+
 
 class InspectionDemoEntity(BaseEntity):
     type = INSPECTION_DEMO_TYPE
@@ -41,6 +42,7 @@ TWEEZERS_INSPECTION_TYPE = 'tweezers_measurement'
 
 
 INSIGHT_TYPE = 'Insights'
+
 
 class InsightEntity(BaseEntity):
     type = INSIGHT_TYPE
@@ -73,3 +75,24 @@ class WorkerStatesAttr(Attr):
 class WorkerEntity(BaseEntity):
     type = WORKER_TYPE
     workerStates: Optional[StructuredValueAttr]
+
+
+TASK_EXECUTION_TYPE = 'TaskExecution'
+
+
+class TaskExecutionEntity(BaseEntity):
+    type = TASK_EXECUTION_TYPE
+    # target_id: Optional[StringAttr] = Field(alias='targetId')
+    creationTimestamp: Optional[TextAttr]
+    additionalParameters: Optional[StructuredValueAttr]
+    taskName: Optional[TextAttr]
+    duration: Optional[FloatAttr]
+    iteration: Optional[FloatAttr]
+
+
+EQUIPMENT_IOT_MEASUREMENT = 'EquipmentIoTMeasurement'
+
+
+class EquipmentIoTMeasurementEntity(BaseEntity):
+    type = EQUIPMENT_IOT_MEASUREMENT
+    fields: Optional[StructuredValueAttr]
