@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dazzler"
-version = "0.4.0"
+version = "0.8.0"
 description = "Dazzling Dash-boards for KITT4SME services."
 authors = ["c0c0n3"]
 
@@ -11,7 +11,7 @@ dash-bootstrap-components = "^1.0.3"
 dash-bootstrap-templates = "^1.0.5"
 fastapi = "^0.75.0"
 Flask = "^2.1.1"
-fipy = {git = "https://github.com/c0c0n3/kitt4sme.fipy.git", rev = "0.9.0"}
+fipy = {git = "https://github.com/c0c0n3/kitt4sme.fipy.git", rev = "0.11.0"}
 pandas = "^1.4.1"
 pydantic = "^1.9.0"
 uvicorn = {extras = ["standard"], version = "^0.17.6"}

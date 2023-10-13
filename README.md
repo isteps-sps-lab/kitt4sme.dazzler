@@ -90,8 +90,8 @@ you'll find a Docker compose file with
 
 * Quantum Leap with a CrateDB backend
 * Our Dazzler service
-* Dazzler config to make the VIQE and Roughnator dashboards available
-  to a tenant named "demo".
+* Dazzler config to make the VIQE, Insight, FAMS and Roughnator
+  dashboards available to a tenant named "demo".
 
 To start the show, run (Ctrl+C to stop)
 
@@ -102,8 +102,9 @@ $ python tests/sim
 
 This will bring up the Docker compose environment (assuming you've got a
 Docker engine running already) and then will start sending Quantum Leap
-Roughnator estimate and VIQE inspection report entities. To see what's
-going on, browse to the CrateDB Web UI at: http://localhost:4200.
+Roughnator estimates, VIQE inspection reports, Insight forecasts and
+FAMS fatigue measurements. To see what's going on, browse to the CrateDB
+Web UI at: http://localhost:4200.
 
 Now browse to the Roughnator dashboard at:
 
@@ -123,6 +124,14 @@ You should be able to monitor in real-time inspection reports as the
 simulator produces them. (Sleuth is a made-up AI service that inspects
 parts being machined to sniff out surface areas where defects are likely
 to be. Loosely based on the first implementation of VIQE.)
+
+The FAMS fatigue monitoring dashboard is at
+
+- http://localhost:8000/dazzler/demo/-/fams/
+
+When you get there, you should see two graphs, one showing current
+fatigue levels per production line and the other plotting fatigue
+over time per production line.
 
 Finally, we've got a demo for the Insight Generator dashboard too.
 In this demo, the simulator sends Insight entities to Orion and the
