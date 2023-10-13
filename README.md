@@ -130,8 +130,8 @@ The FAMS fatigue monitoring dashboard is at
 - http://localhost:8000/dazzler/demo/-/fams/
 
 When you get there, you should see two graphs, one showing current
-fatigue levels per production cell and the other plotting fatigue
-over time per production cell.
+fatigue levels per production line and the other plotting fatigue
+over time per production line.
 
 Finally, we've got a demo for the Insight Generator dashboard too.
 In this demo, the simulator sends Insight entities to Orion and the
