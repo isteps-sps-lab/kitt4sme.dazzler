@@ -3,6 +3,7 @@ import os
 
 import cv2
 import dash_bootstrap_components as dbc
+import numpy as np
 import pandas as pd
 import plotly.express as px
 from dash import Dash, html, dcc, Output, Input
@@ -31,6 +32,8 @@ class SmartCollaborationDashboard:
                               (485, 250, 517, 282),
                               (150, 368, 182, 400),
                               (345, 410, 377, 442)]
+        # change screws order
+        self._screw_coords = np.array(self._screw_coords)[np.array([2, 1, 3, 0, 4, 6, 5, 7, 8])].tolist()
         self._orion = OrionSource(app)
         self._quantumleap = QuantumLeapSource(app)
         self._base_path = BasePath.from_board_app(app)
