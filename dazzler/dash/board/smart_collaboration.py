@@ -9,7 +9,7 @@ from dash import Dash, html, dcc, Output, Input
 
 from dazzler.dash.fiware import QuantumLeapSource, OrionSource
 from dazzler.dash.wiring import BasePath
-from dazzler.ngsy import TaskExecutionEntity
+from dazzler.ngsy import TASK_EXECUTION_TYPE
 
 
 def dash_builder(app: Dash) -> Dash:
@@ -139,11 +139,10 @@ class SmartCollaborationDashboard:
         )(self._update_buffer)
 
     def _update_config(self, n_intervals):
-        task_execution = TaskExecutionEntity(id='')
-        interventions = self._orion.fetch_entity_ids(task_execution.type)  # todo read ID from dashboard
-        task_execution.id = interventions[-1]
-        intervention = self._orion.fetch_entity(task_execution)
-        last_configuration = intervention.additionalParameters.value["sequence"]
+        task_execution = list(self._quantumleap.fetch_entity_type_series(entity_type=TASK_EXECUTION_TYPE,
+                                                                         entries_from_latest=1).values())[0].to_dict(
+            orient='records')[-1]  # todo read ID from dashboard
+        last_configuration = task_execution['additionalParameters']['sequence']
         img = cv2.imread(self._input_path)
         for position, present in zip(self._screw_coords, last_configuration):
             if present == 1:
