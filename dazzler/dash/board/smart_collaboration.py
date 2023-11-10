@@ -134,11 +134,14 @@ class SmartCollaborationDashboard:
             Input('config-iot-id', 'value'),
         )(self._update_buffer)
 
-    def _update_config(self, n_intervals):
+    def _fetch_last_config(self):
         task_execution = list(self._quantumleap.fetch_entity_type_series(entity_type=TASK_EXECUTION_TYPE,
                                                                          entries_from_latest=1).values())[0].to_dict(
             orient='records')[-1]  # todo read ID from dashboard
-        last_configuration = task_execution['additionalParameters']['sequence']
+        return task_execution['additionalParameters']['sequence']
+
+    def _update_config(self, n_intervals):
+        last_configuration = self._fetch_last_config()
         img = cv2.imread(self._input_path)
         for position, present in zip(self._screw_coords, last_configuration):
             if present == 1:
