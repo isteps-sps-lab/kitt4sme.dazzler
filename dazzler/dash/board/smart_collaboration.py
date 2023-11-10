@@ -65,11 +65,6 @@ class SmartCollaborationDashboard:
                                         html.Center([
                                             self._config_fig(),
                                         ], id='config'),
-                                        dcc.Interval(
-                                            id='config-interval',
-                                            interval=5 * 1000,  # in milliseconds
-                                            n_intervals=0
-                                        )
                                     ],
                                     align="center",
                                     class_name="mb-3",  # bottom spacing
@@ -103,11 +98,6 @@ class SmartCollaborationDashboard:
                                             )],
                                             md=6
                                         ),
-                                        dcc.Interval(
-                                            id='graphs-interval',
-                                            interval=1 * 1000,  # in milliseconds
-                                            n_intervals=0
-                                        )
                                     ],
                                     align="center",
                                 ),
@@ -116,6 +106,11 @@ class SmartCollaborationDashboard:
                         ),
                     ],
                 ),
+                dcc.Interval(
+                    id='config-interval',
+                    interval=1 * 1000,  # in milliseconds
+                    n_intervals=0
+                )
             ],
             fluid=False,
             class_name='p-3'  # padding
