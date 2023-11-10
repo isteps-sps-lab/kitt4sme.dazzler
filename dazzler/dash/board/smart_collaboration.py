@@ -34,6 +34,7 @@ class SmartCollaborationDashboard:
         self._orion = OrionSource(app)
         self._quantumleap = QuantumLeapSource(app)
         self._base_path = BasePath.from_board_app(app)
+        self._image_width = None
 
     def build_dash_app(self) -> Dash:
         self._build_layout()
@@ -62,7 +63,7 @@ class SmartCollaborationDashboard:
                                 dbc.Row(
                                     [
                                         html.Center([
-                                            html.Img(src=self._config_fig()),
+                                            self._config_fig(),
                                         ], id='config'),
                                         dcc.Interval(
                                             id='config-interval',
@@ -151,10 +152,7 @@ class SmartCollaborationDashboard:
             else:
                 cv2.rectangle(img, (position[0], position[1]),
                               (position[2], position[3]), (0, 0, 255), 5)
-
-        return [
-            html.Img(src=self._config_fig(img)),
-        ]
+        return [self._config_fig(img)]
 
     def _update_fatigue(self, n_intervals, worker_entity_id):
         if not worker_entity_id:
@@ -190,8 +188,10 @@ class SmartCollaborationDashboard:
     def _config_fig(self, img=None):
         if img is None:  # The truth value of a Series is ambiguous
             img = cv2.imread(self._input_path)
-
-        return f"data:image/png;base64,{base64.b64encode(cv2.imencode('.jpg', img)[1]).decode('ascii')}"
+        base64_img = base64.b64encode(cv2.imencode('.jpg', img)[1]).decode('ascii')
+        return html.Img(src=f"data:image/png;base64,{base64_img}",
+                        className="img-fluid",
+                        width=self._image_width)
 
     def _fatigue_fig(self, df=None):
         if df is None:  # The truth value of a Series is ambiguous
